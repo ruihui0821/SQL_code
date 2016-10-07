@@ -1,6 +1,21 @@
-set search_path=summary,fima,public;
+set search_path=summary,fima,public,us;
 
 --* Correcting jurisdiction_id (not llj_id) in claims_summary 1, 1.1
+
+-- * Correcting re_state update in Data_Correction
+
+UPDATE public.paidclaims pc
+SET re_state = (
+  SELECT sfc.fipsalphacode
+  FROM fima.statefipscodes sfc
+	JOIN fima.jurisdictions j ON (sfc.fipsnumbercode = j.j_statefp10)
+	WHERE pc.re_community = j.j_cid LIMIT 1)
+ WHERE EXISTS(
+  SELECT sfc.fipsalphacode
+  FROM fima.statefipscodes sfc
+	JOIN fima.jurisdictions j ON (sfc.fipsnumbercode = j.j_statefp10)
+	WHERE pc.re_community = j.j_cid) 
+ 
 -- 1
 drop table summary.matthew_claims_monthly_summary_j;
 create table summary.matthew_claims_monthly_summary_j as
@@ -18,10 +33,11 @@ sum(pay_bldg+pay_cont) as pay,
 sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
 from public.paidclaims pc
-join fima.jurisdictions j on (re_community=j.j_cid)
-where re_state in ('FL','GA','SC','NC')
+inner join fima.jurisdictions j on (re_community=j.j_cid)
+where j.j_statefp10 in('12','13','37','45')
 group by 1,2,3
 order by 1,2,3;
+-- 'Florida','Georgia','North Carolina', 'South Carolina'
 
 alter table summary.matthew_claims_monthly_summary_j
 add primary key (jurisdiction_id,year,month);
@@ -62,8 +78,6 @@ where i.to_year=2015;
 
 alter table summary.matthew_claims_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
-
-
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
 drop table us.matthew_claims_accum_monthly_2015_j;
 create table us.matthew_claims_accum_monthly_2015_j
@@ -83,8 +97,24 @@ extract(epoch from ((year||'-'||CAST(month AS VARCHAR(2))||'-01')::date + interv
 extract(epoch from '2015-03-31'::date) as accu_epoch_end,
 j.boundary
 from summary.matthew_claims_monthly_summary_2015_j
-join fima.jurisdictions j using (jurisdiction_id);
+inner join fima.jurisdictions j using (jurisdiction_id);
 
+-- qgis layer for accumulative monthly claims per capita by community level, in 2015 dollar value
+drop table us.matthew_claims_accum_monthly_2015_j_pop10;
+create table us.matthew_claims_accum_monthly_2015_j_pop10
+as select
+jurisdiction_id,
+year,
+month,
+j.j_pop10 as population,
+j.shape_area as area,
+accu_count/j.j_pop10 as accu_count_capita,
+accu_pay/j.j_pop10 as accu_pay_capita,
+epoch_start,
+accu_epoch_end,
+j.boundary
+from us.matthew_claims_accum_monthly_2015_j
+inner join fima.jurisdictions j using (jurisdiction_id);
 
 
 -- 2
@@ -148,7 +178,6 @@ from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
 alter table summary.matthew_claims_monthly_summary_2015_llj add primary key (llj_id,year,month);
-
 
 
 -- qgis layer for accumulative monthly claims by joined 0.1lat/long-community level, in 2015 dollar value
