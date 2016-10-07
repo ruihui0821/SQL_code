@@ -2,19 +2,6 @@ set search_path=summary,fima,public,us;
 
 --* Correcting jurisdiction_id (not llj_id) in claims_summary 1, 1.1
 
--- * Correcting re_state update in Data_Correction
-
-UPDATE public.paidclaims pc
-SET re_state = (
-  SELECT sfc.fipsalphacode
-  FROM fima.statefipscodes sfc
-	JOIN fima.jurisdictions j ON (sfc.fipsnumbercode = j.j_statefp10)
-	WHERE pc.re_community = j.j_cid LIMIT 1)
- WHERE EXISTS(
-  SELECT sfc.fipsalphacode
-  FROM fima.statefipscodes sfc
-	JOIN fima.jurisdictions j ON (sfc.fipsnumbercode = j.j_statefp10)
-	WHERE pc.re_community = j.j_cid) 
  
 -- 1
 drop table summary.matthew_claims_monthly_summary_j;
