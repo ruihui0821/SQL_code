@@ -6,6 +6,7 @@ drop table summary.matthew_claims_monthly_summary_j;
 create table summary.matthew_claims_monthly_summary_j as
 select
 jurisdiction_id,
+j_cid,
 extract(year from dt_of_loss) as year,
 extract(month from dt_of_loss) as month,
 count(*),
@@ -20,12 +21,12 @@ avg(waterdepth)::decimal(6,2) as waterdepth
 from public.paidclaims pc
 join fima.jurisdictions j on (re_community=j.j_cid)
 where j.j_statefp10 in('12','13','37','45')
-group by 1,2,3
-order by 1,2,3;
+group by 1,2,3,4
+order by 1,2,3,4;
 -- 'Florida','Georgia','North Carolina', 'South Carolina'
 
 alter table summary.matthew_claims_monthly_summary_j
-add primary key (jurisdiction_id,year,month);
+add primary key (jurisdiction_id,j_cid,year,month);
 
 --1.1
 drop table summary.matthew_claims_monthly_summary_2015_j;
@@ -33,6 +34,7 @@ create table summary.matthew_claims_monthly_summary_2015_j as
 with s as (
  select
  jurisdiction_id,
+ j_cid,
  year,
  month,
  count,
@@ -46,6 +48,7 @@ with s as (
  from summary.matthew_claims_monthly_summary_j)
 select
 s.jurisdiction_id,
+s.j_cid,
 year,
 month,
 count,
@@ -60,13 +63,14 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table summary.matthew_claims_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
+alter table summary.matthew_claims_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
 
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
 drop table us.matthew_claims_accum_monthly_2015_j;
 create table us.matthew_claims_accum_monthly_2015_j
 as select
-jurisdiction_id,
+s.jurisdiction_id,
+s.j_cid,
 year,
 month,
 sum(count) OVER(PARTITION BY jurisdiction_id ORDER BY year, month) AS accu_count,
@@ -80,14 +84,15 @@ extract(epoch from (year||'-'||CAST(month AS VARCHAR(2))||'-01')::date) as epoch
 extract(epoch from ((year||'-'||CAST(month AS VARCHAR(2))||'-01')::date + interval '1 month' - interval '1 day') ) as epoch_end,
 extract(epoch from '2015-03-31'::date) as accu_epoch_end,
 j.boundary
-from summary.matthew_claims_monthly_summary_2015_j
+from summary.matthew_claims_monthly_summary_2015_j s
 join fima.jurisdictions j using (jurisdiction_id);
 
 -- qgis layer for accumulative monthly claims per capita by community level, in 2015 dollar value
 drop table us.matthew_claims_accum_monthly_2015_j_pop10;
 create table us.matthew_claims_accum_monthly_2015_j_pop10
 as select
-jurisdiction_id,
+s.jurisdiction_id,
+s.j_cid,
 year,
 month,
 j.j_pop10 as population,
@@ -103,7 +108,7 @@ join fima.jurisdictions j using (jurisdiction_id)
 order by year, month;
 
 
--- 2
+-- 2 (not making yet)
 drop table summary.matthew_claims_monthly_summary_llj;
 create table summary.matthew_claims_monthly_summary_llj as
 select
@@ -226,8 +231,8 @@ alter table summary.matthew_claims_monthly_summary_2015_j add column flood_zone 
 
 update summary.matthew_claims_monthly_summary_2015_j v
 set flood_zone = 'V'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
+where v.j_cid in (
+ select j.j_cid
  from public.paidclaims pc
  join fima.jurisdictions j on (pc.re_community=j.j_cid)
  where j.j_statefp10 in('12','13','37','45') AND
@@ -241,7 +246,8 @@ where v.jurisdiction_id in (
 drop table summary.matthew_policy_monthly_summary_j;
 create table summary.matthew_policy_monthly_summary_j as
 select
-jurisdiction_id,
+j.jurisdiction_id,
+j.j_cid,
 extract(year from end_eff_dt) as year,
 extract(month from end_eff_dt) as month,
 sum(condo_unit) as condo_count,
@@ -251,12 +257,12 @@ sum(t_cov_cont) as t_cov_cont
 from public.allpolicy a
 join fima.jurisdictions j on (re_community=j.j_cid)
 where j.j_statefp10 in('12','13','37','45')
-group by 1,2,3
-order by 1,2,3;
+group by 1,2,3,4
+order by 1,2,3,4;
 -- 'Florida','Georgia','North Carolina', 'South Carolina'
 
 alter table summary.matthew_policy_monthly_summary_j
-add primary key (jurisdiction_id,year,month);
+add primary key (jurisdiction_id,j_cid,year,month);
 
 --4.1
 drop table summary.matthew_policy_monthly_summary_2015_j;
@@ -264,6 +270,7 @@ create table summary.matthew_policy_monthly_summary_2015_j as
 with s as (
  select
  jurisdiction_id,
+ j_cid,
  year,
  month,
  condo_count,
@@ -273,6 +280,7 @@ with s as (
  from summary.matthew_policy_monthly_summary_j)
 select
 s.jurisdiction_id,
+s.j_cid,
 year,
 month,
 condo_count,
@@ -283,15 +291,15 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table summary.matthew_policy_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
+alter table summary.matthew_policy_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
 
 -- 5. Coastal Flood zone
 alter table summary.matthew_policy_monthly_summary_2015_j add column flood_zone character varying(3);
 
 update summary.matthew_policy_monthly_summary_2015_j v
 set flood_zone = 'V'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
+where v.j_cid in (
+ select j.j_cid
  from public.paidclaims pc
  join fima.jurisdictions j on (pc.re_community=j.j_cid)
  where j.j_statefp10 in('12','13','37','45') AND
