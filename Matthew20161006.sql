@@ -20,7 +20,7 @@ sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
 from public.paidclaims pc
 join fima.jurisdictions j on (re_community=j.j_cid)
-where j.j_statefp10 in('12','13','37','45')
+where j.j_statefp10 in('12','13','37','45') and pc.re_community NOT IN ('000000', '720000', '210120')
 group by 1,2,3,4
 order by 1,2,3,4;
 -- 'Florida','Georgia','North Carolina', 'South Carolina'
@@ -236,6 +236,7 @@ where v.j_cid in (
  from public.paidclaims pc
  join fima.jurisdictions j on (pc.re_community=j.j_cid)
  where j.j_statefp10 in('12','13','37','45') AND
+ pc.re_community NOT IN ('000000', '720000', '210120') AND
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
 
@@ -256,7 +257,7 @@ sum(t_cov_bldg) as t_cov_bldg,
 sum(t_cov_cont) as t_cov_cont
 from public.allpolicy a
 join fima.jurisdictions j on (re_community=j.j_cid)
-where j.j_statefp10 in('12','13','37','45')
+where j.j_statefp10 in('12','13','37','45') and a.re_community NOT IN ('000000', '720000', '210120')
 group by 1,2,3,4
 order by 1,2,3,4;
 -- 'Florida','Georgia','North Carolina', 'South Carolina'
@@ -303,6 +304,7 @@ where v.j_cid in (
  from public.paidclaims pc
  join fima.jurisdictions j on (pc.re_community=j.j_cid)
  where j.j_statefp10 in('12','13','37','45') AND
+ pc.re_community NOT IN ('000000', '720000', '210120') AND
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
  
@@ -322,7 +324,7 @@ select s.fipsalphacode, sum(t_premium)
 from summary.matthew_policy_monthly_summary_2015_j p
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
-where p.year>=1994 and p.year<= 2014 
+where p.year>=1994 and p.year<= 2014
 and p.flood_zone = 'V'
 group by 1
 order by 1;
@@ -331,7 +333,7 @@ select s.fipsalphacode, count(*), sum(pay)
 from summary.matthew_claims_monthly_summary_2015_j c
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
-where c.year>=1994 and c.year<= 2014 
+where c.year>=1994 and c.year<= 2014
 and c.flood_zone = 'V'
 group by 1
 order by 1;
@@ -340,24 +342,4 @@ select state, ratio
 from policy_premium_claim_pay_state
 where state in ('FL','GA','SC','NC');
 
-SELECT 
-re_state, 
-extract(year FROM dt_of_loss) AS year, 
-count(*) 
-FROM public.paidclaims pc 
-	 JOIN fima.jurisdictions j ON (pc.re_community = j.j_cid)
-	 JOIN fima.statefipscodes sfc ON (sfc.fipsnumbercode = j.j_statefp10)
-WHERE pc.re_state!=sfc.fipsalphacode
-GROUP BY 1,2
-ORDER BY 1,2;
 
-SELECT 
-re_state, 
-extract(year FROM end_eff_dt) AS year, 
-count(*) 
-FROM public.allpolicy ap 
-	 JOIN fima.jurisdictions j ON (ap.re_community = j.j_cid)
-	 JOIN fima.statefipscodes sfc ON (sfc.fipsnumbercode = j.j_statefp10)
-WHERE ap.re_state!=sfc.fipsalphacode
-GROUP BY 1,2
-ORDER BY 1,2;
