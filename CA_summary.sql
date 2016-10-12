@@ -1,12 +1,11 @@
-set search_path=summary,fima,public,us;
+set search_path=ca,summary,fima,public,us;
 
 -- Claims data
 -- 1
-drop table summary.matthew_claims_monthly_summary_j;
-create table summary.matthew_claims_monthly_summary_j as
+drop table ca.ca_claims_monthly_summary_j;
+create table ca.ca_claims_monthly_summary_j as
 select
-jurisdiction_id,
-j_cid,
+j.jurisdiction_id,
 extract(year from dt_of_loss) as year,
 extract(month from dt_of_loss) as month,
 count(*),
@@ -19,22 +18,20 @@ sum(pay_bldg+pay_cont) as pay,
 sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
 from public.paidclaims pc
-join fima.jurisdictions j on (re_community=j.j_cid)
-where j.j_statefp10 in('12','13','37','45') and pc.re_community NOT IN ('000000', '720000', '210120')
-group by 1,2,3,4
-order by 1,2,3,4;
--- 'Florida','Georgia','North Carolina', 'South Carolina'
+join fima.jurisdictions j using (jurisdiction_id)
+where j.j_statefp10 = '06'
+group by 1,2,3
+order by 1,2,3;
 
-alter table summary.matthew_claims_monthly_summary_j
+alter table ca.ca_claims_monthly_summary_j
 add primary key (jurisdiction_id,j_cid,year,month);
 
 --1.1
-drop table summary.matthew_claims_monthly_summary_2015_j;
-create table summary.matthew_claims_monthly_summary_2015_j as
+drop table ca.ca_claims_monthly_summary_2015_j;
+create table ca.ca_claims_monthly_summary_2015_j as
 with s as (
  select
  jurisdiction_id,
- j_cid,
  year,
  month,
  count,
@@ -45,10 +42,9 @@ with s as (
  pay_cont,
  pay,
  pay_icc
- from summary.matthew_claims_monthly_summary_j)
+ from ca.ca_claims_monthly_summary_j)
 select
 s.jurisdiction_id,
-s.j_cid,
 year,
 month,
 count,
@@ -63,14 +59,13 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table summary.matthew_claims_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
+alter table ca.ca_claims_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
 
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
-drop table us.matthew_claims_accum_monthly_2015_j;
-create table us.matthew_claims_accum_monthly_2015_j
+drop table ca.ca_claims_accum_monthly_2015_j;
+create table ca.ca_claims_accum_monthly_2015_j
 as select
 s.jurisdiction_id,
-s.j_cid,
 year,
 month,
 sum(count) OVER(PARTITION BY jurisdiction_id ORDER BY year, month) AS accu_count,
@@ -84,15 +79,14 @@ extract(epoch from (year||'-'||CAST(month AS VARCHAR(2))||'-01')::date) as epoch
 extract(epoch from ((year||'-'||CAST(month AS VARCHAR(2))||'-01')::date + interval '1 month' - interval '1 day') ) as epoch_end,
 extract(epoch from '2015-03-31'::date) as accu_epoch_end,
 j.boundary
-from summary.matthew_claims_monthly_summary_2015_j s
+from ca.ca_claims_monthly_summary_2015_j s
 join fima.jurisdictions j using (jurisdiction_id);
 
 -- qgis layer for accumulative monthly claims per capita by community level, in 2015 dollar value
-drop table us.matthew_claims_accum_monthly_2015_j_pop10;
-create table us.matthew_claims_accum_monthly_2015_j_pop10
+drop table ca.ca_claims_accum_monthly_2015_j_pop10;
+create table ca.ca_claims_accum_monthly_2015_j_pop10
 as select
 s.jurisdiction_id,
-s.j_cid,
 year,
 month,
 j.j_pop10 as population,
@@ -103,14 +97,14 @@ epoch_start,
 epoch_end,
 accu_epoch_end,
 s.boundary
-from us.matthew_claims_accum_monthly_2015_j s
+from ca.ca_claims_accum_monthly_2015_j s
 join fima.jurisdictions j using (jurisdiction_id)
 order by year, month;
 
 
--- 2 (not making yet)
-drop table summary.matthew_claims_monthly_summary_llj;
-create table summary.matthew_claims_monthly_summary_llj as
+-- 2
+drop table ca.ca_claims_monthly_summary_llj;
+create table ca.ca_claims_monthly_summary_llj as
 select
 llj_id,
 extract(year from dt_of_loss) as year,
@@ -126,17 +120,17 @@ sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
 from public.paidclaims pc
 join llgrid g using (gis_longi,gis_lati)
-join fima.jurisdictions j on (re_community=j.j_cid)
+join fima.jurisdictions j using (jurisdiction_id)
 join fima.llj lj using (jurisdiction_id,llgrid_id)
-where re_state in ('FL','GA','SC','NC')
+where re_state = 'CA'
 group by 1,2,3
 order by 1,2,3;
 
-alter table summary.matthew_claims_monthly_summary_llj add primary key (llj_id,year,month);
+alter table ca.ca_claims_monthly_summary_llj add primary key (llj_id,year,month);
 
 -- 2.1
-drop table summary.matthew_claims_monthly_summary_2015_llj;
-create table summary.matthew_claims_monthly_summary_2015_llj as
+drop table ca.ca_claims_monthly_summary_2015_llj;
+create table ca.ca_claims_monthly_summary_2015_llj as
 with s as (
  select
  llj_id,
@@ -150,7 +144,7 @@ with s as (
  pay_cont,
  pay,
  pay_icc
- from summary.matthew_claims_monthly_summary_llj)
+ from ca.ca_claims_monthly_summary_llj)
 select
 s.llj_id,
 year,
@@ -167,12 +161,12 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table summary.matthew_claims_monthly_summary_2015_llj add primary key (llj_id,year,month);
+alter table ca.ca_claims_monthly_summary_2015_llj add primary key (llj_id,year,month);
 
 
 -- qgis layer for accumulative monthly claims by joined 0.1lat/long-community level, in 2015 dollar value
-drop table us.matthew_claims_accum_monthly_2015_llj;
-create table us.matthew_claims_accum_monthly_2015_llj
+drop table ca.ca_claims_accum_monthly_2015_llj;
+create table ca.ca_claims_accum_monthly_2015_llj
 as select
 llj_id,
 year,
@@ -188,13 +182,13 @@ extract(epoch from (year||'-'||CAST(month AS VARCHAR(2))||'-01')::date) as epoch
 extract(epoch from ((year||'-'||CAST(month AS VARCHAR(2))||'-01')::date + interval '1 month' - interval '1 day') ) as epoch_end,
 extract(epoch from '2015-03-31'::date) as accu_epoch_end,
 lj.boundary
-from summary.matthew_claims_monthly_summary_2015_llj
+from ca.ca_claims_monthly_summary_2015_llj
 join fima.llj lj using (llj_id);
 
 
 -- qgis layer for accumulative monthly claims per capita by joined 0.1lat/long-community level, in 2015 dollar value
-drop table us.matthew_claims_accum_monthly_2015_llj_pop10;
-create table us.matthew_claims_accum_monthly_2015_llj_pop10
+drop table ca.ca_claims_accum_monthly_2015_llj_pop10;
+create table ca.ca_claims_accum_monthly_2015_llj_pop10
 as select
 llj_id,
 year,
@@ -211,7 +205,7 @@ epoch_start,
 epoch_end,
 accu_epoch_end,
 s.boundary
-from us.matthew_claims_accum_monthly_2015_llj s
+from ca.ca_claims_accum_monthly_2015_llj s
 join fima.llj_population ljp using (llj_id)
 order by year, month;
 
@@ -227,16 +221,15 @@ order by year, month;
 
 
 -- 3. Coastal Flood zone
-alter table summary.matthew_claims_monthly_summary_2015_j add column flood_zone character varying(3);
+alter table ca.ca_claims_monthly_summary_2015_j add column flood_zone character varying(3);
 
-update summary.matthew_claims_monthly_summary_2015_j v
+update ca.ca_claims_monthly_summary_2015_j v
 set flood_zone = 'V'
-where v.j_cid in (
- select j.j_cid
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
  from public.paidclaims pc
- join fima.jurisdictions j on (pc.re_community=j.j_cid)
- where j.j_statefp10 in('12','13','37','45') AND
- pc.re_community NOT IN ('000000', '720000', '210120') AND
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
 
@@ -244,11 +237,10 @@ where v.j_cid in (
 
 -- Policy Data
 -- 4.
-drop table summary.matthew_policy_monthly_summary_j;
-create table summary.matthew_policy_monthly_summary_j as
+drop table ca.ca_policy_monthly_summary_j;
+create table ca.ca_policy_monthly_summary_j as
 select
 j.jurisdiction_id,
-j.j_cid,
 extract(year from end_eff_dt) as year,
 extract(month from end_eff_dt) as month,
 sum(condo_unit) as condo_count,
@@ -256,32 +248,30 @@ sum(t_premium) as t_premium,
 sum(t_cov_bldg) as t_cov_bldg,
 sum(t_cov_cont) as t_cov_cont
 from public.allpolicy a
-join fima.jurisdictions j on (re_community=j.j_cid)
-where j.j_statefp10 in('12','13','37','45') and a.re_community NOT IN ('000000', '720000', '210120')
-group by 1,2,3,4
-order by 1,2,3,4;
--- 'Florida','Georgia','North Carolina', 'South Carolina'
+join fima.jurisdictions j using (jurisdiction_id)
+where j.j_statefp10 = '06'
+group by 1,2,3
+order by 1,2,3;
 
-alter table summary.matthew_policy_monthly_summary_j
+
+alter table ca.ca_policy_monthly_summary_j
 add primary key (jurisdiction_id,j_cid,year,month);
 
 --4.1
-drop table summary.matthew_policy_monthly_summary_2015_j;
-create table summary.matthew_policy_monthly_summary_2015_j as
+drop table ca.ca_policy_monthly_summary_2015_j;
+create table ca.ca_policy_monthly_summary_2015_j as
 with s as (
  select
  jurisdiction_id,
- j_cid,
  year,
  month,
  condo_count,
  t_premium,
  t_cov_bldg,
  t_cov_cont
- from summary.matthew_policy_monthly_summary_j)
+ from ca.ca_policy_monthly_summary_j)
 select
 s.jurisdiction_id,
-s.j_cid,
 year,
 month,
 condo_count,
@@ -292,19 +282,18 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table summary.matthew_policy_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
+alter table ca.ca_policy_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
 
 -- 5. Coastal Flood zone
-alter table summary.matthew_policy_monthly_summary_2015_j add column flood_zone character varying(3);
+alter table ca.ca_policy_monthly_summary_2015_j add column flood_zone character varying(3);
 
-update summary.matthew_policy_monthly_summary_2015_j v
+update ca.ca_policy_monthly_summary_2015_j v
 set flood_zone = 'V'
-where v.j_cid in (
- select j.j_cid
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
  from public.paidclaims pc
- join fima.jurisdictions j on (pc.re_community=j.j_cid)
- where j.j_statefp10 in('12','13','37','45') AND
- pc.re_community NOT IN ('000000', '720000', '210120') AND
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
  
@@ -313,7 +302,7 @@ where v.j_cid in (
 -- Data Summary
 -- State wide and coastal zone claims summary
 select s.fipsalphacode, count(*), sum(pay) 
-from summary.matthew_claims_monthly_summary_2015_j c
+from ca.ca_claims_monthly_summary_2015_j c
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
 where c.flood_zone = 'V'
@@ -321,7 +310,7 @@ group by 1
 order by 1;
 -- State wide and coastal zone policy summary
 select s.fipsalphacode, sum(t_premium) 
-from summary.matthew_policy_monthly_summary_2015_j p
+from ca.ca_policy_monthly_summary_2015_j p
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
 where p.year>=1994 and p.year<= 2014
@@ -330,7 +319,7 @@ group by 1
 order by 1;
 -- 1994-2014 ratio
 select s.fipsalphacode, count(*), sum(pay) 
-from summary.matthew_claims_monthly_summary_2015_j c
+from ca.ca_claims_monthly_summary_2015_j c
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
 where c.year>=1994 and c.year<= 2014
@@ -340,4 +329,4 @@ order by 1;
 
 select state, ratio
 from policy_premium_claim_pay_state
-where state in ('FL','GA','SC','NC');
+where state = 'CA';
