@@ -24,7 +24,7 @@ group by 1,2,3
 order by 1,2,3;
 
 alter table ca.ca_claims_monthly_summary_j
-add primary key (jurisdiction_id,j_cid,year,month);
+add primary key (jurisdiction_id,year,month);
 
 --1.1
 drop table ca.ca_claims_monthly_summary_2015_j;
@@ -59,7 +59,7 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table ca.ca_claims_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
+alter table ca.ca_claims_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
 drop table ca.ca_claims_accum_monthly_2015_j;
@@ -209,19 +209,49 @@ from ca.ca_claims_accum_monthly_2015_llj s
 join fima.llj_population ljp using (llj_id)
 order by year, month;
 
--- cd Downloads/Matthew/Matthew_accumulative_monthly_#claims
--- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o Matthew_Accumulative_Monthly_#claims.mp4
+-- cd Downloads/CA/CA_accumulative_monthly_#claims
+-- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims.mp4
 
--- cd Downloads/Matthew/Matthew_accumulative_monthly_payclaims
--- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o Matthew_Accumulative_Monthly_payclaims.mp4
+-- cd Downloads/CA/CA_accumulative_monthly_payclaims
+-- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_payclaims.mp4
 
--- cd Downloads/Matthew/Matthew_accumulative_monthly_#claims_capita
--- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o Matthew_Accumulative_Monthly_#claims_capita.mp4
+-- cd Downloads/CA/CA_accumulative_monthly_#claims_capita
+-- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims_capita.mp4
 
 
 
 -- 3. Coastal Flood zone
 alter table ca.ca_claims_monthly_summary_2015_j add column flood_zone character varying(3);
+
+update ca.ca_claims_monthly_summary_2015_j v
+set flood_zone = 'A'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('A')
+ group by 1);
+
+update ca.ca_claims_monthly_summary_2015_j v
+set flood_zone = 'B'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('B')
+ group by 1);
+ 
+update ca.ca_claims_monthly_summary_2015_j v
+set flood_zone = 'C'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('C','X')
+ group by 1);
 
 update ca.ca_claims_monthly_summary_2015_j v
 set flood_zone = 'V'
@@ -232,9 +262,17 @@ where v.jurisdiction_id in (
  where j.j_statefp10 = '06' AND
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
-
-
-
+ 
+update ca.ca_claims_monthly_summary_2015_j v
+set flood_zone = 'D'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('D')
+ group by 1);
+ 
 -- Policy Data
 -- 4.
 drop table ca.ca_policy_monthly_summary_j;
@@ -255,7 +293,7 @@ order by 1,2,3;
 
 
 alter table ca.ca_policy_monthly_summary_j
-add primary key (jurisdiction_id,j_cid,year,month);
+add primary key (jurisdiction_id,year,month);
 
 --4.1
 drop table ca.ca_policy_monthly_summary_2015_j;
@@ -282,10 +320,40 @@ to_year as dollars_in
 from s join inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-alter table ca.ca_policy_monthly_summary_2015_j add primary key (jurisdiction_id,j_cid,year,month);
+alter table ca.ca_policy_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
 -- 5. Coastal Flood zone
 alter table ca.ca_policy_monthly_summary_2015_j add column flood_zone character varying(3);
+ 
+update ca.ca_policy_monthly_summary_2015_j v
+set flood_zone = 'A'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('A')
+ group by 1);
+
+update ca.ca_policy_monthly_summary_2015_j v
+set flood_zone = 'B'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('B')
+ group by 1);
+ 
+update ca.ca_policy_monthly_summary_2015_j v
+set flood_zone = 'C'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('C','X')
+ group by 1);
 
 update ca.ca_policy_monthly_summary_2015_j v
 set flood_zone = 'V'
@@ -297,33 +365,31 @@ where v.jurisdiction_id in (
  substr(pc.flood_zone, 1, 1) IN ('V')
  group by 1);
  
- 
+update ca.ca_policy_monthly_summary_2015_j v
+set flood_zone = 'D'
+where v.jurisdiction_id in (
+ select j.jurisdiction_id
+ from public.paidclaims pc
+ join fima.jurisdictions j using (jurisdiction_id)
+ where j.j_statefp10 = '06' AND
+ substr(pc.flood_zone, 1, 1) IN ('D')
+ group by 1); 
  
 -- Data Summary
--- State wide and coastal zone claims summary
-select s.fipsalphacode, count(*), sum(pay) 
+select flood_zone, sum(count) as count, sum(pay) 
 from ca.ca_claims_monthly_summary_2015_j c
-join fima.jurisdictions j using (jurisdiction_id)
-join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
-where c.flood_zone = 'V'
 group by 1
 order by 1;
--- State wide and coastal zone policy summary
-select s.fipsalphacode, sum(t_premium) 
+
+select flood_zone, sum(condo_count) as count, sum(t_premium) 
 from ca.ca_policy_monthly_summary_2015_j p
-join fima.jurisdictions j using (jurisdiction_id)
-join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
 where p.year>=1994 and p.year<= 2014
-and p.flood_zone = 'V'
 group by 1
 order by 1;
--- 1994-2014 ratio
-select s.fipsalphacode, count(*), sum(pay) 
+
+select flood_zone, sum(count) as count, sum(pay) 
 from ca.ca_claims_monthly_summary_2015_j c
-join fima.jurisdictions j using (jurisdiction_id)
-join fima.statefipscodes s on (j.j_statefp10 = s.fipsnumbercode)
 where c.year>=1994 and c.year<= 2014
-and c.flood_zone = 'V'
 group by 1
 order by 1;
 
