@@ -1,11 +1,31 @@
 set search_path=ca,summary,fima,public,us;
 
+drop table ca.capaidclaims;
+create table ca.capaidclaims as
+select pc.*
+from public.paidclaims pc
+join fima.jurisdictions j using (jurisdiction_id)
+where j.j_statefp10 = '06' or pc.re_state = 'CA';
+
+alter table ca.capaidclaims
+add primary key (gid,pcid);
+
+drop table ca.caallpolicy;
+create table ca.caallpolicy as
+select ap.*
+from public.allpolicy ap
+join fima.jurisdictions j using (jurisdiction_id)
+where j.j_statefp10 = '06' or ap.re_state = 'CA';
+
+alter table ca.caallpolicy
+add primary key (apid);
+
 -- Claims data
 -- 1
 drop table ca.ca_claims_monthly_summary_j;
 create table ca.ca_claims_monthly_summary_j as
 select
-j.jurisdiction_id,
+jurisdiction_id,
 extract(year from dt_of_loss) as year,
 extract(month from dt_of_loss) as month,
 count(*),
@@ -17,9 +37,7 @@ sum(pay_cont) as pay_cont,
 sum(pay_bldg+pay_cont) as pay,
 sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
-from public.paidclaims pc
-join fima.jurisdictions j using (jurisdiction_id)
-where j.j_statefp10 = '06'
+from ca.capaidclaims
 group by 1,2,3
 order by 1,2,3;
 
@@ -62,6 +80,7 @@ where i.to_year=2015;
 alter table ca.ca_claims_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
+-- not making yet
 drop table ca.ca_claims_accum_monthly_2015_j;
 create table ca.ca_claims_accum_monthly_2015_j
 as select
@@ -83,6 +102,7 @@ from ca.ca_claims_monthly_summary_2015_j s
 join fima.jurisdictions j using (jurisdiction_id);
 
 -- qgis layer for accumulative monthly claims per capita by community level, in 2015 dollar value
+-- not making yet
 drop table ca.ca_claims_accum_monthly_2015_j_pop10;
 create table ca.ca_claims_accum_monthly_2015_j_pop10
 as select
@@ -118,11 +138,10 @@ sum(pay_cont) as pay_cont,
 sum(pay_bldg+pay_cont) as pay,
 sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
-from public.paidclaims pc
+from ca.capaidclaims
 join llgrid g using (gis_longi,gis_lati)
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.llj lj using (jurisdiction_id,llgrid_id)
-where re_state = 'CA'
 group by 1,2,3
 order by 1,2,3;
 
@@ -187,6 +206,7 @@ join fima.llj lj using (llj_id);
 
 
 -- qgis layer for accumulative monthly claims per capita by joined 0.1lat/long-community level, in 2015 dollar value
+-- not making yet
 drop table ca.ca_claims_accum_monthly_2015_llj_pop10;
 create table ca.ca_claims_accum_monthly_2015_llj_pop10
 as select
@@ -219,58 +239,25 @@ order by year, month;
 -- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims_capita.mp4
 
 
-
--- 3. Coastal Flood zone
-alter table ca.ca_claims_monthly_summary_2015_j add column flood_zone character varying(3);
+-- 3 Sacramento Valley, San Joaquin Valley and the rest of california
+alter table ca.ca_claims_monthly_summary_2015_j add column valley character varying(6);
 
 update ca.ca_claims_monthly_summary_2015_j v
-set flood_zone = 'A'
+set valley = 'SAV'
 where v.jurisdiction_id in (
  select j.jurisdiction_id
- from public.paidclaims pc
+ from ca.ca_claims_monthly_summary_2015_j
  join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('A')
+ where substr(j.j_cid,1,6) IN ( '060017','060019','060020','060022','060023','060024','060057','060059','060239','060240','060241','060242','060243','060262','060263','060264','060265','060266','060358','060359','060360','060394','060395','060396','060398','060400','060423','060424','060425','060426','060427','060428','060437','060460','060650','060721','060728','060746','060748','060758','060765','060767','060772','065053','065064')
  group by 1);
 
 update ca.ca_claims_monthly_summary_2015_j v
-set flood_zone = 'B'
+set valley = 'SJV'
 where v.jurisdiction_id in (
  select j.jurisdiction_id
- from public.paidclaims pc
+ from ca.ca_claims_monthly_summary_2015_j
  join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('B')
- group by 1);
- 
-update ca.ca_claims_monthly_summary_2015_j v
-set flood_zone = 'C'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('C','X')
- group by 1);
-
-update ca.ca_claims_monthly_summary_2015_j v
-set flood_zone = 'V'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('V')
- group by 1);
- 
-update ca.ca_claims_monthly_summary_2015_j v
-set flood_zone = 'D'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('D')
+ where substr(j.j_cid,1,6) IN ('060044','060045','060046','060047','060048','060049','060050','060051','060052','060053','060054','060055','060075','060076','060077','060078','060079','060080','060081','060082','060084','060085','060086','060088','060089','060170','060172','060188','060189','060191','060299','060300','060302','060303','060384','060385','060387','060388','060389','060390','060391','060392','060393','060403','060404','060405','060406','060407','060409','060440','060443','060450','060454','060457','060644','060663','060706','060738','060747','065029','065063','065065','065066','065071','065073')
  group by 1);
  
 -- Policy Data
@@ -278,19 +265,16 @@ where v.jurisdiction_id in (
 drop table ca.ca_policy_monthly_summary_j;
 create table ca.ca_policy_monthly_summary_j as
 select
-j.jurisdiction_id,
+jurisdiction_id,
 extract(year from end_eff_dt) as year,
 extract(month from end_eff_dt) as month,
 sum(condo_unit) as condo_count,
 sum(t_premium) as t_premium,
 sum(t_cov_bldg) as t_cov_bldg,
 sum(t_cov_cont) as t_cov_cont
-from public.allpolicy a
-join fima.jurisdictions j using (jurisdiction_id)
-where j.j_statefp10 = '06'
+from ca.caallpolicy
 group by 1,2,3
 order by 1,2,3;
-
 
 alter table ca.ca_policy_monthly_summary_j
 add primary key (jurisdiction_id,year,month);
@@ -322,70 +306,77 @@ where i.to_year=2015;
 
 alter table ca.ca_policy_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
--- 5. Coastal Flood zone
-alter table ca.ca_policy_monthly_summary_2015_j add column flood_zone character varying(3);
- 
+-- 5. Sacramento Valley, San Joaquin Valley and the rest of california
+alter table ca.ca_policy_monthly_summary_2015_j add column valley character varying(6);
+
 update ca.ca_policy_monthly_summary_2015_j v
-set flood_zone = 'A'
+set valley = 'SAV'
 where v.jurisdiction_id in (
  select j.jurisdiction_id
- from public.paidclaims pc
+ from ca.ca_policy_monthly_summary_2015_j
  join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('A')
+ where substr(j.j_cid,1,6) IN ( '060017','060019','060020','060022','060023','060024','060057','060059','060239','060240','060241','060242','060243','060262','060263','060264','060265','060266','060358','060359','060360','060394','060395','060396','060398','060400','060423','060424','060425','060426','060427','060428','060437','060460','060650','060721','060728','060746','060748','060758','060765','060767','060772','065053','065064')
  group by 1);
 
 update ca.ca_policy_monthly_summary_2015_j v
-set flood_zone = 'B'
+set valley = 'SJV'
 where v.jurisdiction_id in (
  select j.jurisdiction_id
- from public.paidclaims pc
+ from ca.ca_policy_monthly_summary_2015_j
  join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('B')
+ where substr(j.j_cid,1,6) IN ('060044','060045','060046','060047','060048','060049','060050','060051','060052','060053','060054','060055','060075','060076','060077','060078','060079','060080','060081','060082','060084','060085','060086','060088','060089','060170','060172','060188','060189','060191','060299','060300','060302','060303','060384','060385','060387','060388','060389','060390','060391','060392','060393','060403','060404','060405','060406','060407','060409','060440','060443','060450','060454','060457','060644','060663','060706','060738','060747','065029','065063','065065','065066','065071','065073')
  group by 1);
  
-update ca.ca_policy_monthly_summary_2015_j v
-set flood_zone = 'C'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('C','X')
- group by 1);
+-- Data Summary by flood zone
+alter table ca.capaidclaims add column fzone character varying(3);
 
-update ca.ca_policy_monthly_summary_2015_j v
-set flood_zone = 'V'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('V')
- group by 1);
- 
-update ca.ca_policy_monthly_summary_2015_j v
-set flood_zone = 'D'
-where v.jurisdiction_id in (
- select j.jurisdiction_id
- from public.paidclaims pc
- join fima.jurisdictions j using (jurisdiction_id)
- where j.j_statefp10 = '06' AND
- substr(pc.flood_zone, 1, 1) IN ('D')
- group by 1); 
- 
--- Data Summary
-select flood_zone, sum(count) as count, sum(pay) 
+update ca.capaidclaims
+set fzone = 'A'
+where substr(flood_zone,1,1) IN ('A');
+
+update ca.capaidclaims
+set fzone = 'B'
+where substr(flood_zone,1,1) IN ('B');
+
+update ca.capaidclaims
+set fzone = 'C'
+where substr(flood_zone,1,1) IN ('C','X');
+
+update ca.capaidclaims
+set fzone = 'V'
+where substr(flood_zone,1,1) IN ('V');
+
+update ca.capaidclaims
+set fzone = 'D'
+where substr(flood_zone,1,1) IN ('D');
+
+with s as (
+ select extract(year from dt_of_loss) as year, sum(pay_cont) as pay
+ from ca.capaidclaims c
+ group by 1
+ order by 1)
+select pay from s order by year;
+
+select sum(t_premium) 
+from ca.caallpolicy p
+where end_eff_dt >= '1994-01-01' and end_eff_dt <= '2014-12-31';
+
+select count(*), sum(pay_bldg+pay_cont) 
+from ca.capaidclaims c
+where dt_of_loss >= '1994-01-01' and dt_of_loss <= '2014-12-31'
+and substr(flood_zone,1,1) IN ('A');
+
+-- Data summary by Valley
+select sum(count) 
 from ca.ca_claims_monthly_summary_2015_j c
-group by 1
-order by 1;
+group by year
+order by year;
 
-select flood_zone, sum(condo_count) as count, sum(t_premium) 
+select sum(t_premium) 
 from ca.ca_policy_monthly_summary_2015_j p
-where p.year>=1994 and p.year<= 2014
-group by 1
-order by 1;
+where p.year>=1994 and p.year<= 2014 and valley = 'SAV'
+group by year
+order by year;
 
 select flood_zone, sum(count) as count, sum(pay) 
 from ca.ca_claims_monthly_summary_2015_j c
@@ -393,6 +384,8 @@ where c.year>=1994 and c.year<= 2014
 group by 1
 order by 1;
 
-select state, ratio
-from policy_premium_claim_pay_state
-where state = 'CA';
+-- Sacramento Valley Communities
+substr(community,1,6) IN ( '060017','060019','060020','060022','060023','060024','060057','060059','060239','060240','060241','060242','060243','060262','060263','060264','060265','060266','060358','060359','060360','060394','060395','060396','060398','060400','060423','060424','060425','060426','060427','060428','060437','060460','060650','060721','060728','060746','060748','060758','060765','060767','060772','065053','065064')
+
+-- San Joaquin Valley Communities
+substr(community,1,6) IN ('060044','060045','060046','060047','060048','060049','060050','060051','060052','060053','060054','060055','060075','060076','060077','060078','060079','060080','060081','060082','060084','060085','060086','060088','060089','060170','060172','060188','060189','060191','060299','060300','060302','060303','060384','060385','060387','060388','060389','060390','060391','060392','060393','060403','060404','060405','060406','060407','060409','060440','060443','060450','060454','060457','060644','060663','060706','060738','060747','065029','065063','065065','065066','065071','065073') 
