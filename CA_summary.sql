@@ -338,7 +338,7 @@ join fima.jurisdictions j using (jurisdiction_id)
 group by 1, 2;
 
 -- cd Downloads/CA/CA_accumulative_monthly_#claims
--- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims.mp4
+-- mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims.mp4
 
 -- cd Downloads/CA/CA_accumulative_monthly_payclaims
 -- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_payclaims.mp4
