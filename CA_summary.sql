@@ -79,6 +79,42 @@ where i.to_year=2015;
 
 alter table ca.ca_claims_monthly_summary_2015_j add primary key (jurisdiction_id,year,month);
 
+-- 1.2 annual summary, 
+-- Not Making yet
+drop table ca.ca_claims_yearly_2015_j;
+create table ca.ca_claims_yearly_2015_j as
+with s as (
+ select
+ jurisdiction_id,
+ year,
+ sum(count) as count,
+ sum(t_dmg_bldg) as t_dmg_bldg,
+ sum(t_dmg_cont) as t_dmg_cont,
+ sum(t_dmg) as t_dmg,
+ sum(pay_bldg) as pay_bldg,
+ sum(pay_cont) as pay_cont,
+ sum(pay) as pay,
+ sum(pay_icc) as pay_icc
+ from ca.ca_claims_monthly_summary_j
+ group by 1,2
+)
+select
+s.jurisdiction_id,
+year,
+count,
+t_dmg_bldg*rate as t_dmg_bldg,
+t_dmg_cont*rate as t_dmg_cont,
+t_dmg*rate as t_dmg,
+pay_bldg*rate as pay_bldg,
+pay_cont*rate as pay_cont,
+pay*rate as pay,
+pay_icc*rate as pay_icc,
+to_year as dollars_in
+from s join inflation i on (i.from_year=s.year)
+where i.to_year=2015;
+
+alter table ca.ca_claims_yearly_2015_j add primary key (jurisdiction_id,year);
+
 -- qgis layer for accumulative monthly claims by community level, in 2015 dollar value
 -- not making yet
 drop table ca.ca_claims_accum_monthly_2015_j;
@@ -182,6 +218,40 @@ where i.to_year=2015;
 
 alter table ca.ca_claims_monthly_summary_2015_llj add primary key (llj_id,year,month);
 
+-- 2.2 annual summary
+drop table ca.ca_claims_yearly_2015_llj;
+create table ca.ca_claims_yearly_2015_llj as
+with s as (
+ select
+ llj_id,
+ year,
+ sum(count) as count,
+ sum(t_dmg_bldg) as t_dmg_bldg,
+ sum(t_dmg_cont) as t_dmg_cont,
+ sum(t_dmg) as t_dmg,
+ sum(pay_bldg) as pay_bldg,
+ sum(pay_cont) as pay_cont,
+ sum(pay) as pay,
+ sum(pay_icc) as pay_icc
+ from ca.ca_claims_monthly_summary_llj
+ group by 1,2
+)
+select
+s.llj_id,
+year,
+count,
+t_dmg_bldg*rate as t_dmg_bldg,
+t_dmg_cont*rate as t_dmg_cont,
+t_dmg*rate as t_dmg,
+pay_bldg*rate as pay_bldg,
+pay_cont*rate as pay_cont,
+pay*rate as pay,
+pay_icc*rate as pay_icc,
+to_year as dollars_in
+from s join inflation i on (i.from_year=s.year)
+where i.to_year=2015;
+
+alter table ca.ca_claims_yearly_2015_llj add primary key (llj_id,year);
 
 -- qgis layer for accumulative monthly claims by joined 0.1lat/long-community level, in 2015 dollar value
 drop table ca.ca_claims_accum_monthly_2015_llj;
@@ -228,6 +298,44 @@ s.boundary
 from ca.ca_claims_accum_monthly_2015_llj s
 join fima.llj_population ljp using (llj_id)
 order by year, month;
+
+-- qgis layer for accumulative monthly claims by joined 0.1lat/long-community level, in 2015 dollar value
+drop table ca.ca_claims_yearly_llj;
+create table ca.ca_claims_yearly_llj
+as select
+llj_id,
+year,
+count,
+pay_bldg,
+pay_cont,
+pay,
+t_dmg_bldg,
+t_dmg_cont,
+t_dmg,
+extract(epoch from (year||'-01-01')::date) as epoch_start ,
+extract(epoch from (year||'-12-31')::date) as epoch_end,
+lj.boundary
+from ca.ca_claims_yearly_2015_llj s
+join fima.llj lj using (llj_id)
+join fima.jurisdictions j using (jurisdiction_id)
+order by 1, 2;
+
+drop table ca.ca_claims_llj;
+create table ca.ca_claims_llj
+as select
+llj_id,
+lj.boundary,
+sum(count) as count,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont,
+sum(pay) as pay,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(t_dmg) as t_dmg
+from ca.ca_claims_yearly_2015_llj s
+join fima.llj lj using (llj_id)
+join fima.jurisdictions j using (jurisdiction_id)
+group by 1, 2;
 
 -- cd Downloads/CA/CA_accumulative_monthly_#claims
 -- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o CA_Accumulative_Monthly_#claims.mp4
