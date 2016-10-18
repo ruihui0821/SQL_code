@@ -96,9 +96,6 @@ set ratio_nons = 999999 where pay_nons is null;
 update us.premium_pay_state
 set ratio_nonks = 999999 where pay_nonks is null;
 
-alter table summary.claims_yearly_state_jurisdiction_2015 add column payrank character varying (2);
-update summary.claims_yearly_state_jurisdiction_2015 c
-
 drop table summary.policy_claims_yearly_state_2015;
 create table summary.policy_claims_yearly_state_2015 as
 select 
