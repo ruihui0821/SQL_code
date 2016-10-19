@@ -30,6 +30,51 @@ create table public.llgridpolicy_state as select llgrid_id,j_statefp10 from llgr
 --$$;
 
 
+-- Modifications to fima.jurisdictions to make it nice;
+alter table fima.jurisdictions rename objectid to jurisdiction_id;
+alter table fima.jurisdictions add boundary geometry('MULTIPOLYGON',4326);
+update fima.jurisdictions set boundary=st_transform(wkb_geometry,4326);
+CREATE INDEX jursidictions_boundary ON fima.jurisdictions USING GIST (boundary );
+
+drop table fima.lljpolicy;
+create table fima.lljpolicy as
+select
+llgrid_id,
+jurisdiction_id,
+st_intersection(ll.boundary,st_makevalid(j.boundary)) as boundary
+from llgridpolicy ll
+join fima.jurisdictions j on (st_intersects(ll.boundary,j.boundary));
+
+alter table fima.lljpolicy add column llj_id serial primary key;
+alter table fima.lljpolicy add unique (llgrid_id,jurisdiction_id);
+CREATE INDEX llj_boundary ON fima.lljpolicy USING GIST (boundary );
+
+alter table fima.lljpolicy add column hectares bigint;
+update fima.lljpolicy set hectares=(st_area(st_transform(boundary,2163))/10000)::bigint;
+
+drop table fima.lljpolicy_population;
+create table fima.lljpolicy_population as
+with a as (
+ select
+  llj_id,jurisdiction_id,
+  hectares,sum(hectares) OVER (partition by jurisdiction_id) as total
+  from fima.lljpolicy
+)
+select
+ llj_id,
+ ((a.hectares/a.total)*j_pop10)::decimal(18,4) as pop10
+ from a join fima.jurisdictions j
+ using (jurisdiction_id);
+ 
+update fima.lljpolicy_population
+set pop10 = 999999999999
+where pop10 = 0;
+
+
+
+
+
+
 with j as (
  select j_cid as community,j_geoid10||j_source as dfirm_id
  from jurisdictions
