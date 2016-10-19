@@ -98,25 +98,50 @@ set ratio_nonks = 999999 where pay_nonks is null;
 
 drop table summary.policy_claims_yearly_state_2015;
 create table summary.policy_claims_yearly_state_2015 as
+with cs as (
+  select 
+    state, 
+    year,
+    sum(c.count) as ccount,
+    sum(c.pay) as pay,
+    sum(c.t_dmg_bldg) as t_dmg_bldg,
+    sum(c.t_dmg_cont) as t_dmg_cont,
+    sum(c.t_dmg) as t_dmg,
+    sum(c.pay_bldg) as pay_bldg,
+    sum(c.pay_cont) as pay_cont,
+    sum(c.pay_icc) as pay_icc
+  from summary.claims_yearly_state_jurisdiction_2015 c
+  group by 1,2
+  order by 1,2),
+ps as (
+  select
+    state,
+    year,
+    sum(p.count) as pcount,
+    sum(p.t_premium) as premium,
+    sum(p.t_cov_bldg) as t_cov_bldg,
+    sum(p.t_cov_cont) as t_cov_cont
+  from summary.policy_yearly_state_jurisdiction_2015 p
+  group by 1,2
+  order by 1,2)
 select 
-  COALESCE(p.state, c.state) AS state, 
-  COALESCE(p.year, c.year) AS year,
-  sum(c.count) as ccount,
-  sum(c.pay) as pay,
-  sum(c.t_dmg_bldg) as t_dmg_bldg,
-  sum(c.t_dmg_cont) as t_dmg_cont,
-  sum(c.t_dmg) as t_dmg,
-  sum(c.pay_bldg) as pay_bldg,
-  sum(c.pay_cont) as pay_cont,
-  sum(c.pay_icc) as pay_icc,
-  sum(p.count) as pcount,
-  sum(p.t_premium) as premium,
-  sum(p.t_cov_bldg) as t_cov_bldg,
-  sum(p.t_cov_cont) as t_cov_cont
-from summary.claims_yearly_state_jurisdiction_2015 c
-full outer join summary.policy_yearly_state_jurisdiction_2015 p using(state, year)
-group by 1,2
-order by 1,2;
+COALESCE(cs.state, ps.state) AS state,
+COALESCE(cs.year, ps.year) AS year,
+cs.ccount,
+cs.pay,
+cs.t_dmg_bldg,
+cs.t_dmg_cont,
+cs.t_dmg,
+cs.pay_bldg,
+cs.pay_cont,
+cs.pay_icc,
+ps.pcount,
+ps.premium,
+ps.t_cov_bldg,
+ps.t_cov_cont
+from cs
+full outer join ps using(state, year)
+order by 1, 2;
 
 alter table summary.policy_claims_yearly_state_2015 add primary key(state,year);
 
