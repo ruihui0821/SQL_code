@@ -15,9 +15,9 @@ extract(epoch from (year||'-01-01')::date) as epoch_start,
 extract(epoch from (year||'-12-31')::date) as epoch_end,
 lj.boundary
 from summary.policy_yearly_2015_llj s
-join fima.llj lj using (llj_id)
+join fima.lljpolicy lj using (llj_id)
 join fima.jurisdictions j using (jurisdiction_id)
-join fima.llj_population ljp using (llj_id)
+join fima.lljpolicy_population ljp using (llj_id)
 where year>=1994 and year<=2014;
 
 -- cd Downloads/Time_Manager/US_yearly_#claims_capita
@@ -35,9 +35,8 @@ create table us.policy_monthly_2015_llj_pop10
 as select
 llj_id,
 year,
-year + 1 as endyear,
+year - 1 as syear,
 month,
-month - 1 as endmonth,
 ljp.pop10 as population,
 count/ljp.pop10 as count_capita,
 t_premium/ljp.pop10 as t_premium_capita,
@@ -48,9 +47,9 @@ extract(epoch from (year||'-'||CAST(month AS VARCHAR(2))||'-01')::date) as epoch
 extract(epoch from ((year||'-'||CAST(month AS VARCHAR(2))||'-01')::date + interval '1 month' - interval '1 day') ) as epoch_end,
 lj.boundary
 from summary.policy_monthly_summary_2015_llj s
-join fima.llj lj using (llj_id)
+join fima.lljpolicy lj using (llj_id)
 join fima.jurisdictions j using (jurisdiction_id)
-join fima.llj_population ljp using (llj_id);
+join fima.lljpolicy_population ljp using (llj_id);
 
 -- cd Downloads/Time_Manager/US_monthly_#claims_kcapita
 
@@ -76,14 +75,13 @@ create table us.policy_effmonthly_2015_llj_pop10
 as select
 llj_id,
 year,
-endyear,
+syear,
 month,
-endmonth,
-sum(count_capita) OVER(PARTITION BY llj_id ORDER BY endyear, endmonth) - sum(count_capita) OVER(PARTITION BY llj_id ORDER BY year, month) AS accu_count_capita,
-sum(t_premium_capita) OVER(PARTITION BY llj_id ORDER BY year, month) AS accu_t_premium_capita,
-sum(t_cov_bldg_capita) OVER(PARTITION BY llj_id ORDER BY year, month) AS accu_t_cov_bldg_capita,
-sum(t_cov_cont_capita) OVER(PARTITION BY llj_id ORDER BY year, month) AS accu_t_cov_cont_capita,
-sum(t_cov_capita) OVER(PARTITION BY llj_id ORDER BY year, month) AS accu_t_cov_capita,
+sum(count_capita) OVER(PARTITION BY llj_id ORDER BY year, month) - sum(count_capita) OVER(PARTITION BY llj_id ORDER BY syear, month) AS eff_count_capita,
+sum(t_premium_capita) OVER(PARTITION BY llj_id ORDER BY year, month) - sum(t_premium_capita) OVER(PARTITION BY llj_id ORDER BY syear, month) AS eff_t_premium_capita,
+sum(t_cov_bldg_capita) OVER(PARTITION BY llj_id ORDER BY year, month) - sum(t_cov_bldg_capita) OVER(PARTITION BY llj_id ORDER BY syear, month) AS eff_t_cov_bldg_capita,
+sum(t_cov_cont_capita) OVER(PARTITION BY llj_id ORDER BY year, month) - sum(t_cov_cont_capita) OVER(PARTITION BY llj_id ORDER BY syear, month) AS eff_t_cov_cont_capita,
+sum(t_cov_capita) OVER(PARTITION BY llj_id ORDER BY year, month) - sum(t_cov_capita) OVER(PARTITION BY llj_id ORDER BY syear, month) AS eff_t_cov_capita,
 epoch_start,
 epoch_end,
 boundary
