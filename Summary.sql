@@ -120,7 +120,8 @@ order by 1,2;
 
 alter table summary.policy_claims_yearly_state_2015 add primary key(state,year);
 
-
+drop table us.premium_pay_state_noworst;
+create table us.premium_pay_state_noworst as
 with s as (with m as (
     select pc.state, max(pc.pay) as maxpay 
     from summary.policy_claims_yearly_state_2015 pc
