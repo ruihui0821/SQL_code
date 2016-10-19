@@ -122,27 +122,58 @@ alter table summary.policy_claims_yearly_state_2015 add primary key(state,year);
 
 drop table us.premium_pay_state_noworst;
 create table us.premium_pay_state_noworst as
-with s as (with m as (
-    select pc.state, max(pc.pay) as maxpay 
-    from summary.policy_claims_yearly_state_2015 pc
-    where pc.year>=1994 and pc.year<=2014
-    group by state
-    order by state)
+with cs as ( 
+  with s as ( 
+    with m as (
+      select pc.state, max(pc.pay) as maxpay 
+      from summary.policy_claims_yearly_state_2015 pc
+      where pc.year>=1994 and pc.year<=2014
+      group by state
+      order by state)
+    select 
+    ps.state, 
+    ps.year
+    from summary.policy_claims_yearly_state_2015 ps
+    join m using (state)
+    where ps.year>=1994 and ps.year<=2014 and ps.pay=m.maxpay
+    order by 1) 
+  select 
+  c.state, 
+  sum(c.pay) as pay
+  from summary.claims_yearly_state_jurisdiction_2015 c
+  join s using (state)
+  where c.year>=1994 and c.year<=2014 and c.year!=s.year
+  group by 1
+  order by 1),
+ps as ( 
+  with s as ( 
+    with m as (
+      select pc.state, max(pc.pay) as maxpay 
+      from summary.policy_claims_yearly_state_2015 pc
+      where pc.year>=1994 and pc.year<=2014
+      group by state
+      order by state)
+    select 
+    ps.state, 
+    ps.year
+    from summary.policy_claims_yearly_state_2015 ps
+    join m using (state)
+    where ps.year>=1994 and ps.year<=2014 and ps.pay=m.maxpay
+    order by 1) 
   select 
   p.state, 
-  p.year
-  from summary.policy_claims_yearly_state_2015 p
-  join m using (state)
-  where p.year>=1994 and p.year<=2014 and p.pay=m.maxpay
-  order by 1) 
+  sum(p.t_premium) as premium
+  from summary.policy_yearly_state_jurisdiction_2015 p
+  join s using (state)
+  where p.year>=1994 and p.year<=2014 and p.year!=s.year
+  group by 1
+  order by 1)
 select 
-p.state, 
-sum(p.premium) as premium,
-sum(p.pay) as pay,
-(sum(p.premium)/sum(p.pay)) as ratio
-from summary.policy_claims_yearly_state_2015 p
-join s using (state)
-where p.year>=1994 and p.year<=2014 and p.year!=s.year
-group by 1
+COALESCE(cs.state, ps.state) AS state,
+ps.premium,
+cs.pay,
+(ps.premium/cs.pay) as ratio
+from ps
+full outer join cs using (state)
 order by 1;
   
