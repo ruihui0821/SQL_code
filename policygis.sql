@@ -49,8 +49,8 @@ alter table fima.lljpolicy add column llj_id serial primary key;
 alter table fima.lljpolicy add unique (llgrid_id,jurisdiction_id);
 CREATE INDEX llj_boundary ON fima.lljpolicy USING GIST (boundary );
 
-alter table fima.lljpolicy add column hectares bigint;
-update fima.lljpolicy set hectares=(st_area(st_transform(boundary,2163))/10000)::bigint;
+alter table fima.lljpolicy add column hectares decimal(18,8);
+update fima.lljpolicy set hectares=(st_area(st_transform(boundary,2163))/10000)::decimal(18,8);
 
 drop table fima.lljpolicy_population;
 create table fima.lljpolicy_population as
@@ -80,7 +80,7 @@ with j as (
  from jurisdictions
 ),
 c as (
- select community,count(*)
+ select re_community as community,count(*)
  from allpolicy
  group by 1
 )
