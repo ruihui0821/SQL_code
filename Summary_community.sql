@@ -2,6 +2,7 @@ set search_path=summary,fima,public,us,ca;
 
 -- ratios of policy premium to claims payment by community
 -- according to the re_state and community column
+-- not making
 drop table us.premium_pay_community;
 create table us.premium_pay_community as
 with c as (
@@ -146,6 +147,7 @@ order by 1, 2;
 
 alter table summary.policy_claims_yearly_community_2015 add primary key(community,year);
 
+-- not making
 drop table us.premium_pay_community_noworst;
 create table us.premium_pay_community_noworst as
 with cs as ( 
@@ -203,11 +205,13 @@ from ps
 full outer join cs using (community)
 order by 1;
 
+-- converting the us.premium_pay_state_jurisdiction to community
 drop table us.premium_pay_state_community;
 create table us.premium_pay_state_community as
 select
-sfc.fipsalphacode as state,
-p.community,
+p.state,
+p.jurisdiction_id,
+j.j_cid as community,
 p.premium,
 p.pay,
 p.ratio,
@@ -220,11 +224,9 @@ p.ratio_nons,
 p.premium_nonks,
 p.pay_nonks,
 p.ratio_nonks,
-n.premium as premium_noworst,
-n.pay as pay_noworst,
-n.ratio as ratio_noworst
-from us.premium_pay_community p
-full outer join us.premium_pay_community_noworst n using (community)
-join fima.jurisdictions j ON (p.community = j.j_cid)
-join fima.statefipscodes sfc ON (sfc.fipsnumbercode = j.j_statefp10)
-order by 1, 2;
+p.premium_noworst,
+p.pay_noworst,
+p.ratio_noworst
+from us.premium_pay_state_jurisdiction p
+join fima.jurisdictions j using (jurisdiction_id)
+order by 1, 2, 3;
