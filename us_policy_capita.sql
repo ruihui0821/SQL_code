@@ -221,12 +221,27 @@ from summary.policy_monthlyeff_2015_llj s
 join fima.lljpolicy lj using (llj_id)
 join fima.jurisdictions j using (jurisdiction_id)
 join fima.lljpolicy_population ljp using (llj_id)
-where llj_id is not null;
+where llj_id is not null and count > 1.0e-010;
 
+select effdate, max(count_capita) from us.policy_monthlyeff_2015_llj_pop10 group by 1 order by 2 desc limit 5;
 
+  effdate   |        max         
+------------+--------------------
+ 1997-10-31 | 60000.000000000000
+ 1998-02-28 | 60000.000000000000
+ 1997-11-30 | 60000.000000000000
+ 1997-12-31 | 60000.000000000000
+ 1997-09-30 | 60000.000000000000
 
+select effdate, max(premium_capita) from us.policy_monthlyeff_2015_llj_pop10 group by 1 order by 2 desc limit 5;
 
-
+  effdate   |       max        
+------------+------------------
+ 2002-09-30 |         33610747
+ 2002-08-31 | 33519103.5000001
+ 2002-04-30 |       33451829.5
+ 2002-05-31 |       33451829.5
+ 2002-07-31 | 33430198.0000001
 
       
       
