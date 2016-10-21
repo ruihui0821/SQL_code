@@ -142,7 +142,7 @@ alter table summary.policy_dailyeff_2015_llj alter column effdate type date;
 
 -- 4.1 daily effective policy per capita
 -- not making yet
-drop table us.policy_mdailyeff_2015_llj_pop10;
+drop table us.policy_dailyeff_2015_llj_pop10;
 create table us.policy_dailyeff_2015_llj_pop10 as
 select
  llj_id,
@@ -172,9 +172,9 @@ WITH s AS (
   SUM(b.t_premium) AS spremium,
   SUM(b.t_cov_bldg) AS st_cov_bldg,
   SUM(b.t_cov_cont) AS st_cov_cont,
-  d.as_of_date AS sdate 
-  FROM GENERATE_SERIES('1994-01-01'::timestamp, '2014-12-01'::timestamp, interval '1 month') d (as_of_date)
-  LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt <= d.as_of_date
+  d.as_of_date - interval '1 day' AS sdate 
+  FROM GENERATE_SERIES('1994-01-01'::timestamp, '2015-01-01'::timestamp, interval '1 month') d (as_of_date)
+  LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt < d.as_of_date
   GROUP BY b.llj_id, d.as_of_date
   ORDER BY b.llj_id, d.as_of_date),
 e AS (
@@ -184,9 +184,9 @@ e AS (
   SUM(b.t_premium) AS epremium,
   SUM(b.t_cov_bldg) AS et_cov_bldg,
   SUM(b.t_cov_cont) AS et_cov_cont,
-  d.as_of_date + interval '1 year' as edate 
-  FROM GENERATE_SERIES('1993-01-01'::timestamp, '2013-12-01'::timestamp, interval '1 month') d (as_of_date)
-  LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt <= d.as_of_date
+  d.as_of_date - interval '1 day' + interval '1 year' as edate 
+  FROM GENERATE_SERIES('1993-01-01'::timestamp, '2014-01-01'::timestamp, interval '1 month') d (as_of_date)
+  LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt < d.as_of_date
   GROUP BY b.llj_id, d.as_of_date
   ORDER BY b.llj_id, d.as_of_date)
 select
