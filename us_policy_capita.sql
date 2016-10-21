@@ -220,7 +220,8 @@ select
 from summary.policy_monthlyeff_2015_llj s
 join fima.lljpolicy lj using (llj_id)
 join fima.jurisdictions j using (jurisdiction_id)
-join fima.lljpolicy_population ljp using (llj_id);
+join fima.lljpolicy_population ljp using (llj_id)
+where llj_id is not null;
 
 
 
