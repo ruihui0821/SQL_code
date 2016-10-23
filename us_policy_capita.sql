@@ -60,7 +60,7 @@ join fima.lljpolicy_population ljp using (llj_id);
 -- mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Monthly_new_premiumpolicy_capita.mp4
 
 
--- 3 MONTHLY effective policy per capita
+-- 3 MONTHLY effective policy per capita, at then end of each month
 drop table us.policy_monthlyeff_2015_llj_pop10;
 create table us.policy_monthlyeff_2015_llj_pop10 as
 select
@@ -72,8 +72,8 @@ select
  t_cov_bldg/ljp.pop10 as t_cov_bldg_capita,
  t_cov_cont/ljp.pop10 as t_cov_cont_capita,
  (t_cov_bldg+t_cov_cont)/ljp.pop10 as t_cov_capita,
- extract(epoch from effdate) as epoch_start,
- extract(epoch from (effdate + interval '1 month' - interval '1 day') ) as epoch_end,
+ extract(epoch from (effdate + interval '1 day' - interval '1 month') ) as epoch_start,
+ extract(epoch from (effdate ) ) as epoch_end,
  lj.boundary
 from summary.policy_monthlyeff_2015_llj s
 join fima.lljpolicy lj using (llj_id)
