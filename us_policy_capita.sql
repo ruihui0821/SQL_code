@@ -60,7 +60,8 @@ join fima.lljpolicy_population ljp using (llj_id);
 -- mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Monthly_new_premiumpolicy_capita.mp4
 
 
--- 3 MONTHLY effective policy per capita, at then end of each month
+-- 3 MONTHLY effective policy per capita, at the end of each month
+-- for Time_manager monthly interval purpose, epoch_start is at the first day of a month, epoch_end is the same as effdate which is the last day of a month
 drop table us.policy_monthlyeff_2015_llj_pop10;
 create table us.policy_monthlyeff_2015_llj_pop10 as
 select
