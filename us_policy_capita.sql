@@ -23,7 +23,7 @@ where year>=1994 and year<=2014;
 
 -- cd Downloads/Time_Manager/US_Annual_#policy_capita
 
--- mencoder mf://*.png -mf w=480:h=640:fps=1:type=png -ovc copy -oac copy -o US_Annual_#policy_capita.mp4
+-- mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Annual_#policy_capita.mp4
 
 -- cd Downloads/Time_Manager/US_Annual_premiumpolicy_capita
 
@@ -103,7 +103,12 @@ select effdate, max(premium_capita) from us.policy_monthlyeff_2015_llj_pop10 gro
  2002-07-31 | 33430198.0000001
 
       
+-- cd Downloads/Time_Manager/US_monthly_effective_#policy_capita
 
+-- mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_slow.mp4
+-- mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita.mp4
+-- mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_fast.mp4
+-- mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_faster.mp4
 
 -- 4 daily effective policy per capita
 -- not making yet
