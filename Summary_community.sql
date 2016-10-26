@@ -205,13 +205,20 @@ from ps
 full outer join cs using (community)
 order by 1;
 
+update us.premium_pay_community_noworst
+set ratio = 0.000001 where premium is null;
+
+update us.premium_pay_community_noworst
+set ratio = 999999 where pay is null;
+
+
 -- converting the us.premium_pay_state_jurisdiction to community
 drop table us.premium_pay_state_community;
 create table us.premium_pay_state_community as
 select
 p.state,
-p.jurisdiction_id,
-j.j_cid as community,
+j.j_namelsad10 as community_name,
+j.j_cid as community_id,
 p.premium,
 p.pay,
 p.ratio,
@@ -226,7 +233,9 @@ p.pay_nonks,
 p.ratio_nonks,
 p.premium_noworst,
 p.pay_noworst,
-p.ratio_noworst
+p.ratio_noworst,
+j.boundary
 from us.premium_pay_state_jurisdiction p
 join fima.jurisdictions j using (jurisdiction_id)
 order by 1, 2, 3;
+
