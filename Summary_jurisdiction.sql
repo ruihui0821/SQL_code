@@ -202,6 +202,14 @@ from ps
 full outer join cs using (jurisdiction_id)
 order by 1;
 
+update us.premium_pay_jurisdiction_noworst
+set ratio = 0.000001 where premium is null;
+
+update us.premium_pay_jurisdiction_noworst
+set ratio = 999999 where pay is null;
+
+
+
 drop table us.premium_pay_state_jurisdiction;
 create table us.premium_pay_state_jurisdiction as
 select
@@ -228,38 +236,9 @@ join fima.jurisdictions j ON (p.jurisdiction_id = j.jurisdiction_id)
 join fima.statefipscodes sfc ON (sfc.fipsnumbercode = j.j_statefp10)
 order by 1, 2;
 
-alter table us.premium_pay_state_jurisdiction add column worst_year double precision;
 
-update us.premium_pay_state_jurisdiction j
-set worst_year = (
-  select s.year 
-  from ( 
-    with m as (
-      select pc.jurisdiction_id, max(pc.pay) as maxpay 
-      from summary.policy_claims_yearly_jurisdiction_2015 pc
-      where pc.year>=1994 and pc.year<=2014
-      group by 1
-      order by 1)
-    select 
-    ps.jurisdiction_id,
-    ps.year
-    from summary.policy_claims_yearly_jurisdiction_2015 ps
-    join m using (jurisdiction_id)
-    where ps.year>=1994 and ps.year<=2014 and ps.pay=m.maxpay
-    order by 1) s where j.jurisdiction_id = s.jurisdiction_id)
-where exists(
-  select s.year 
-  from ( 
-    with m as (
-      select pc.jurisdiction_id, max(pc.pay) as maxpay 
-      from summary.policy_claims_yearly_jurisdiction_2015 pc
-      where pc.year>=1994 and pc.year<=2014
-      group by 1
-      order by 1)
-    select 
-    ps.jurisdiction_id,
-    ps.year
-    from summary.policy_claims_yearly_jurisdiction_2015 ps
-    join m using (jurisdiction_id)
-    where ps.year>=1994 and ps.year<=2014 and ps.pay=m.maxpay
-    order by 1) s where j.jurisdiction_id = s.jurisdiction_id);
+update us.premium_pay_state_jurisdiction
+set ratio_noworst = 0.000001 where premium_noworst is null;
+
+update us.premium_pay_state_jurisdiction
+set ratio_noworst = 999999 where pay_noworst is null;
