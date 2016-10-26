@@ -202,3 +202,8 @@ from ps
 full outer join cs using (state)
 order by 1;
   
+update us.premium_pay_state_noworst
+set ratio = 0.000001 where premium is null;
+
+update us.premium_pay_state_noworst
+set ratio = 999999 where pay is null;
