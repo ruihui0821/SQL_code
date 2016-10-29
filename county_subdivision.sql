@@ -44,4 +44,23 @@ where exists(
   where h.id = hh.id);
   
   
-  
+drop table fima.county_subdivision_income;
+create table fima.county_subdivision_income as
+select
+h.id,
+h.id2,
+n.state,
+n.statefp,
+n.countyname,
+n.countyfp,
+n.cousubname,
+n.cousubfp,
+h.geography,
+h.total_households,
+h.median_income,
+n.funcstat
+from fima.national_county_subdivision n
+left outer join fima.hourseholds_income_county_subdivision h using(statefp, countyfp, cousubfp)
+order by n.statefp, n.countyfp, n.cousubfp;
+
+alter table fima.county_subdivision_income add primary key(statefp, countyfp, cousubfp);
