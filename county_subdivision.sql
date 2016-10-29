@@ -54,6 +54,7 @@ n.statefp,
 n.countyname,
 n.countyfp,
 n.cousubname,
+n.cousubname as scousubname,
 n.cousubfp,
 h.geography,
 h.total_households,
@@ -64,3 +65,16 @@ left outer join fima.hourseholds_income_county_subdivision h using(statefp, coun
 order by n.statefp, n.countyfp, n.cousubfp;
 
 alter table fima.county_subdivision_income add primary key(statefp, countyfp, cousubfp);
+  
+update fima.county_subdivision_income c
+set scousubname = (
+  select trim(trailing ' CCD' from cousubname)
+  from fima.county_subdivision_income cc
+  where c.id = cc.id)
+where scousubname like '%CCD' and
+exists(
+  select trim(trailing ' CCD' from cousubname)
+  from fima.county_subdivision_income cc
+  where c.id = cc.id);
+
+  
