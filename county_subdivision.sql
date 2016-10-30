@@ -78,3 +78,13 @@ exists(
   where c.id = cc.id);
 
   
+select c.* 
+from fima.county_subdivision_income c 
+where c.statefp = '01' and
+c.scousubname ~* (
+  select j.j_name10 
+  from fima.jurisdictions j 
+  where j.j_statefp10 = '01');
+
+
+
