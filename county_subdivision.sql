@@ -78,13 +78,15 @@ exists(
   where c.id = cc.id);
 
   
-select c.* 
-from fima.county_subdivision_income c 
-where c.statefp = '01' and
-c.scousubname ~* (
-  select j.j_name10 
-  from fima.jurisdictions j 
-  where j.j_statefp10 = '01');
+alter table fima.nfip_community_status add column countyfp character varying(3);
+
+update fima.nfip_community_status n
+set countyfp = (
+  select s.countyfp from fima.national_county_subdivision s
+  where s.countyname = n.county_name limit 1)
+where exists(
+  select s.countyfp from fima.national_county_subdivision s
+  where s.countyname = n.county_name limit 1);
 
 
 
