@@ -79,7 +79,7 @@ exists(
 
   
 alter table fima.nfip_community_status add column countyfp character varying(3);
-
+-- not working
 update fima.nfip_community_status n
 set countyfp = (
   select s.countyfp from fima.national_county_subdivision s
@@ -88,5 +88,7 @@ where exists(
   select s.countyfp from fima.national_county_subdivision s
   where s.countyname = n.county_name limit 1);
 
-
+select avg(tract_2010census.cti_median_income) 
+from tract_2010census, jurisdictions 
+where ST_Intersects(tract_2010census.boundary,jurisdictions.boundary);
 
