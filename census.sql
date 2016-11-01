@@ -105,3 +105,57 @@ where ST_Intersects(t.boundary,j.boundary)
 group by 1
 order by 1;
 
+INSERT INTO fima.j_income VALUES
+    (28058, 0.0, 0.0);
+INSERT INTO fima.j_income VALUES
+    (28059, 0.0, 0.0);    
+INSERT INTO fima.j_income VALUES
+    (28060, 0.0, 0.0);
+INSERT INTO fima.j_income VALUES
+    (28061, 0.0, 0.0);    
+
+update fima.j_income
+set class = 1
+where income <= 15000;
+update fima.j_income
+set class = 2
+where income > 15000 and income <= 25000;
+update fima.j_income
+set class = 3
+where income > 25000 and income <= 35000;
+update fima.j_income
+set class = 4
+where income > 35000 and income <= 50000;
+update fima.j_income
+set class = 5
+where income > 50000 and income <= 75000;
+update fima.j_income
+set class = 6
+where income > 75000 and income <= 100000;
+update fima.j_income
+set class = 7
+where income > 100000 and income <= 150000;
+update fima.j_income
+set class = 8
+where income > 150000 and income <= 200000;
+update fima.j_income
+set class = 9
+where income > 200000;
+
+
+-- option 1: average medium income
+avg(t.cti_median_income) as income
+-- option 2: weighted average medium income by number of hourseholds
+sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income
+
+drop table fima.llj_income;
+create table fima.llj_income as
+select 
+llj.llj_id,
+count(t.geoid10) as ntract,
+avg(t.cti_median_income) as income,
+sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income2
+from fima.tract_2010census t, fima.llj
+where ST_Intersects(t.boundary,llj.boundary) 
+group by 1
+order by 1;
