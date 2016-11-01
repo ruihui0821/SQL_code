@@ -88,7 +88,20 @@ where exists(
   select s.countyfp from fima.national_county_subdivision s
   where s.countyname = n.county_name limit 1);
 
+-- test
 select avg(tract_2010census.cti_median_income) 
 from tract_2010census, jurisdictions 
-where ST_Intersects(tract_2010census.boundary,jurisdictions.boundary);
+where ST_Intersects(tract_2010census.boundary,jurisdictions.boundary) and jurisdictions.j_area_id = '06J0488';
+
+drop table fima.j_income;
+create table fima.j_income as
+select 
+j.jurisdiction_id,
+count(t.geoid10) as ntract,
+avg(t.cti_median_income) as income
+from tract_2010census t, jurisdictions j
+where ST_Intersects(t.boundary,j.boundary) 
+-- and j.j_area_id = '06J0488'
+group by 1
+order by 1;
 
