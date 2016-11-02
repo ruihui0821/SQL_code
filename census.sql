@@ -116,31 +116,44 @@ INSERT INTO fima.j_income VALUES
 
 alter table fima.j_income add primary key (jurisdiction_id);
 
-update fima.llj_income
+class | count 
+-------+-------
+ 1     |    25
+ 2     |   211
+ 3     |  2069
+ 4     | 12074
+ 5     | 11046
+ 6     |  1912
+ 7     |   677
+ 8     |    43
+ 9     |     4
+
+
+update fima.lljpolicy_income
 set class = 1
 where income <= 15000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 2
 where income > 15000 and income <= 25000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 3
 where income > 25000 and income <= 35000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 4
 where income > 35000 and income <= 50000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 5
 where income > 50000 and income <= 75000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 6
 where income > 75000 and income <= 100000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 7
 where income > 100000 and income <= 150000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 8
 where income > 150000 and income <= 200000;
-update fima.llj_income
+update fima.lljpolicy_income
 set class = 9
 where income > 200000;
 
@@ -164,6 +177,18 @@ order by 1;
 
 alter table fima.llj_income add primary key (llj_id);
 
+class | count 
+-------+-------
+ 1     |   135
+ 2     |   597
+ 3     |  5094
+ 4     | 25957
+ 5     | 29142
+ 6     |  7087
+ 7     |  2602
+ 8     |   216
+ 9     |    12
+ 
 drop table fima.lljpolicy_income;
 create table fima.lljpolicy_income as
 select 
@@ -177,3 +202,17 @@ group by 1
 order by 1;
 
 alter table fima.lljpolicy_income add primary key (llj_id);
+
+alter table fima.lljpolicy_income add column class character varying(2);
+
+class | count 
+-------+-------
+ 1     |   162
+ 2     |   893
+ 3     |  9395
+ 4     | 46504
+ 5     | 43435
+ 6     |  8135
+ 7     |  2729
+ 8     |   221
+ 9     |    12
