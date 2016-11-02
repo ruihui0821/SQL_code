@@ -216,3 +216,37 @@ class | count
  7     |  2729
  8     |   221
  9     |    12
+
+update summary.policy_yearly_2015_j  set j_pop10  = 9999999999 where j_pop10 = 0;
+
+drop table us.policy_yearly_j_pop10;
+create table us.policy_yearly_j_pop10 as
+select 
+jurisdiction_id,
+year,
+j_pop10,
+boundary,
+count/cast(j_pop10 as decimal(18,4)) as count_capita, 
+t_premium/cast(j_pop10 as decimal(18,4)) as premium_capita,
+j.income,
+j.class
+from summary.policy_yearly_2015_j
+join fima.j_income j using (jurisdiction_id)
+order by 1,2;
+
+
+drop table us.policy_yearly_llj_pop10;
+create table us.policy_yearly_llj_pop10 as
+select 
+llj_id,
+year,
+lp.pop10,
+boundary,
+count/lp.pop10 as count_capita, 
+t_premium/lp.pop10 as premium_capita,
+j.income,
+j.class
+from summary.policy_yearly_2015_llj
+join fima.lljpolicy_income j using (llj_id)
+join fima.llj_population lp using (llj_id)
+order by 1,2;
