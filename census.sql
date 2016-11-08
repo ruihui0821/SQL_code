@@ -116,6 +116,8 @@ INSERT INTO fima.j_income VALUES
 
 alter table fima.j_income add primary key (jurisdiction_id);
 
+-- number of jurisdictions of each income class
+select class, count(*) from fima.j_income group by 1 order by 1;
 class | count 
 -------+-------
  1     |    25
@@ -177,6 +179,8 @@ order by 1;
 
 alter table fima.llj_income add primary key (llj_id);
 
+-- number of llj units for claim database of each income class
+select class, count(*) from fima.llj_income group by 1 order by 1;
 class | count 
 -------+-------
  1     |   135
@@ -205,6 +209,8 @@ alter table fima.lljpolicy_income add primary key (llj_id);
 
 alter table fima.lljpolicy_income add column class character varying(2);
 
+-- number of llj units for policy database of each income class
+select class, count(*) from fima.lljpolicy_income group by 1 order by 1;
 class | count 
 -------+-------
  1     |   162
@@ -226,8 +232,14 @@ jurisdiction_id,
 year,
 j_pop10,
 boundary,
-count/cast(j_pop10 as decimal(18,4)) as count_capita, 
+count,
+count/cast(j_pop10 as decimal(18,4)) as count_capita,
+t_premium as premium,
 t_premium/cast(j_pop10 as decimal(18,4)) as premium_capita,
+t_cov_bldg, 
+t_cov_cont,
+(t_cov_bldg + t_cov_cont) as t_cov,
+(t_cov_bldg + t_cov_cont)/cast(j_pop10 as decimal(18,4)) as t_cov_capita,
 j.income,
 j.class
 from summary.policy_yearly_2015_j
@@ -242,11 +254,14 @@ llj_id,
 year,
 lp.pop10,
 boundary,
+count,
 count/lp.pop10 as count_capita, 
 t_premium/lp.pop10 as premium_capita,
+t_premium as premium,
+(t_cov_bldg + t_cov_cont) as t_cov,
 j.income,
 j.class
 from summary.policy_yearly_2015_llj
-join fima.lljpolicy_income j using (llj_id)
-join fima.lljpolicy_population lp using (llj_id)
+full outer join fima.lljpolicy_income j using (llj_id)
+full outer join fima.lljpolicy_population lp using (llj_id)
 order by 1,2;
