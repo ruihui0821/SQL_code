@@ -248,5 +248,5 @@ j.income,
 j.class
 from summary.policy_yearly_2015_llj
 join fima.lljpolicy_income j using (llj_id)
-join fima.llj_population lp using (llj_id)
+join fima.lljpolicy_population lp using (llj_id)
 order by 1,2;
