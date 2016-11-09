@@ -5,18 +5,18 @@ alter table public.allpolicy add column llj_id integer;
 update public.allpolicy a
 set llj_id = (
  select lj.llj_id 
- from fima.lljpolicy lj
- join llgridpolicy g using (llgrid_id)
- where a.jurisdiction_id = lj.jurisdiction_id and
+ from fima.lljpolicy lj, public.llgridpolicy g
+ where p.jurisdiction_id = lj.jurisdiction_id and
+ lj.llgrid_id = g.llgrid_id and
  a.gis_lati = g.gis_lati and
  a.gis_longi = g.gis_longi limit 1)
 where exists(
  select lj.llj_id 
- from fima.lljpolicy lj
- join llgridpolicy g using (llgrid_id)
- where a.jurisdiction_id = lj.jurisdiction_id and
+ from fima.lljpolicy lj, public.llgridpolicy g
+ where p.jurisdiction_id = lj.jurisdiction_id and
+ lj.llgrid_id = g.llgrid_id and
  a.gis_lati = g.gis_lati and
- a.gis_longi = g.gis_longi limit 1);
+ a.gis_longi = g.gis_longi);
  
 update public.allpolicy a 
 set llj_id = (
@@ -36,20 +36,20 @@ exists(
 -- adding llj_id to claims data
 alter table public.paidclaims add column llj_id integer;
 update public.paidclaims p
-set llj-id = (
+set llj_id = (
  select lj.llj_id 
- from fima.llj lj
- join llgrid g using (llgrid_id)
+ from fima.llj lj, public.llgrid g
  where p.jurisdiction_id = lj.jurisdiction_id and
+ lj.llgrid_id = g.llgrid_id and
  p.gis_lati = g.gis_lati and
  p.gis_longi = g.gis_longi limit 1)
 where exists(
  select lj.llj_id 
- from fima.llj lj
- join llgrid g using (llgrid_id)
+ from fima.llj lj, public.llgrid g
  where p.jurisdiction_id = lj.jurisdiction_id and
+ lj.llgrid_id = g.llgrid_id and
  p.gis_lati = g.gis_lati and
- p.gis_longi = g.gis_longi limit 1);
+ p.gis_longi = g.gis_longi);
  
 update public.paidclaims p
 set llj_id = (
@@ -64,4 +64,4 @@ exists(
  join llgridpolicy g using (llgrid_id)
  where a.jurisdiction_id = lj.jurisdiction_id and
  a.gis_lati = g.gis_lati and
- a.gis_longi = g.gis_longi limit 1);
+ a.gis_longi = g.gis_longi);
