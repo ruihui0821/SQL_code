@@ -1,5 +1,7 @@
 set search_path = fima,us,summary;
 
+
+-- county subdivision data, not in use
 DELETE FROM fima.national_county_subdivision;
 -- import csv file data using pgAdmin3.
 DELETE FROM fima.hourseholds_income_county_subdivision;
@@ -88,6 +90,14 @@ where exists(
   select s.countyfp from fima.national_county_subdivision s
   where s.countyname = n.county_name limit 1);
 
+--------------------------------------------------------------------------------------------------------------------------------------------
+-- income by jurisdiciton
+
+-- option 1: average medium income
+avg(t.cti_median_income) as income
+-- option 2: weighted average medium income by number of hourseholds
+sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income
+
 -- test
 select avg(tract_2010census.cti_median_income) 
 from tract_2010census, jurisdictions 
@@ -116,6 +126,37 @@ INSERT INTO fima.j_income VALUES
 
 alter table fima.j_income add primary key (jurisdiction_id);
 
+alter table fima.j_income add column class character varying(2);
+
+update fima.j_income
+set class = 1
+where income <= 15000;
+update fima.j_income
+set class = 2
+where income > 15000 and income <= 25000;
+update fima.j_income
+set class = 3
+where income > 25000 and income <= 35000;
+update fima.j_income
+set class = 4
+where income > 35000 and income <= 50000;
+update fima.j_income
+set class = 5
+where income > 50000 and income <= 75000;
+update fima.j_income
+set class = 6
+where income > 75000 and income <= 100000;
+update fima.j_income
+set class = 7
+where income > 100000 and income <= 150000;
+update fima.j_income
+set class = 8
+where income > 150000 and income <= 200000;
+update fima.j_income
+set class = 9
+where income > 200000;
+
+
 -- number of jurisdictions of each income class
 select class, count(*) from fima.j_income group by 1 order by 1;
 class | count 
@@ -130,6 +171,143 @@ class | count
  8     |    43
  9     |     4
 
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+-- income by jurisdiciton and 0.1 lat/long for claims database
+
+drop table fima.llj_income;
+create table fima.llj_income as
+select 
+llj.llj_id,
+count(t.geoid10) as ntract,
+avg(t.cti_median_income) as income,
+sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income2
+from fima.tract_2010census t, fima.llj
+where ST_Intersects(t.boundary,llj.boundary) 
+group by 1
+order by 1;
+
+select j.llj_id from fima.llj j where llj_id not in (select lj.llj_id from fima.llj_income lj) order by 1;
+
+INSERT INTO fima.llj_income VALUES
+    (43063, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43064, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43065, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43066, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43067, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43068, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43069, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43070, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43071, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43072, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43102, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43103, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43104, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43105, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43106, 0, 0.0, 0.0);    
+INSERT INTO fima.llj_income VALUES
+    (43107, 0, 0.0, 0.0);
+INSERT INTO fima.llj_income VALUES
+    (43108, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43109, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43110, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43111, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43112, 0, 0.0, 0.0); 
+INSERT INTO fima.llj_income VALUES
+    (43113, 0, 0.0, 0.0); 
+    
+alter table fima.llj_income add primary key (llj_id);
+
+update fima.llj_income
+set income = 0.0 where income is null;
+
+alter table fima.llj_income add column class character varying(2);
+
+update fima.llj_income
+set class = 1
+where income <= 15000;
+update fima.llj_income
+set class = 2
+where income > 15000 and income <= 25000;
+update fima.llj_income
+set class = 3
+where income > 25000 and income <= 35000;
+update fima.llj_income
+set class = 4
+where income > 35000 and income <= 50000;
+update fima.llj_income
+set class = 5
+where income > 50000 and income <= 75000;
+update fima.llj_income
+set class = 6
+where income > 75000 and income <= 100000;
+update fima.llj_income
+set class = 7
+where income > 100000 and income <= 150000;
+update fima.llj_income
+set class = 8
+where income > 150000 and income <= 200000;
+update fima.llj_income
+set class = 9
+where income > 200000;
+
+-- number of llj units for claim database of each income class
+select class, count(*) from fima.llj_income group by 1 order by 1;
+class | count 
+-------+-------
+ 1     |   135
+ 2     |   597
+ 3     |  5094
+ 4     | 25957
+ 5     | 29142
+ 6     |  7087
+ 7     |  2602
+ 8     |   216
+ 9     |    12
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+-- income by jurisdiciton and 0.1 lat/long for policy database
+
+drop table fima.lljpolicy_income;
+create table fima.lljpolicy_income as
+select 
+llj.llj_id,
+count(t.geoid10) as ntract,
+avg(t.cti_median_income) as income,
+sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income2
+from fima.tract_2010census t, fima.lljpolicy llj
+where ST_Intersects(t.boundary,llj.boundary) 
+group by 1
+order by 1;
+
+select j.llj_id from fima.lljpolicy j where llj_id not in (select lj.llj_id from fima.lljpolicy_income lj) order by 1;
+
+alter table fima.lljpolicy_income add primary key (llj_id);
+
+update fima.llj_income
+set income = 0.0 where income is null;
+
+
+alter table fima.lljpolicy_income add column class character varying(2);
 
 update fima.lljpolicy_income
 set class = 1
@@ -158,56 +336,6 @@ where income > 150000 and income <= 200000;
 update fima.lljpolicy_income
 set class = 9
 where income > 200000;
-
-
--- option 1: average medium income
-avg(t.cti_median_income) as income
--- option 2: weighted average medium income by number of hourseholds
-sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income
-
-drop table fima.llj_income;
-create table fima.llj_income as
-select 
-llj.llj_id,
-count(t.geoid10) as ntract,
-avg(t.cti_median_income) as income,
-sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income2
-from fima.tract_2010census t, fima.llj
-where ST_Intersects(t.boundary,llj.boundary) 
-group by 1
-order by 1;
-
-alter table fima.llj_income add primary key (llj_id);
-
--- number of llj units for claim database of each income class
-select class, count(*) from fima.llj_income group by 1 order by 1;
-class | count 
--------+-------
- 1     |   135
- 2     |   597
- 3     |  5094
- 4     | 25957
- 5     | 29142
- 6     |  7087
- 7     |  2602
- 8     |   216
- 9     |    12
- 
-drop table fima.lljpolicy_income;
-create table fima.lljpolicy_income as
-select 
-llj.llj_id,
-count(t.geoid10) as ntract,
-avg(t.cti_median_income) as income,
-sum(t.cti_households * t.cti_median_income)/sum(t.cti_households) as income2
-from fima.tract_2010census t, fima.lljpolicy llj
-where ST_Intersects(t.boundary,llj.boundary) 
-group by 1
-order by 1;
-
-alter table fima.lljpolicy_income add primary key (llj_id);
-
-alter table fima.lljpolicy_income add column class character varying(2);
 
 -- number of llj units for policy database of each income class
 select class, count(*) from fima.lljpolicy_income group by 1 order by 1;
