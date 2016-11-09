@@ -299,11 +299,60 @@ where ST_Intersects(t.boundary,llj.boundary)
 group by 1
 order by 1;
 
-select j.llj_id from fima.lljpolicy j where llj_id not in (select lj.llj_id from fima.lljpolicy_income lj) order by 1;
+select j.llj_id from fima.lljpolicy j where j.llj_id not in (select lj.llj_id from fima.lljpolicy_income lj) order by 1;
+
+INSERT INTO fima.lljpolicy_income VALUES
+    (7180, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (16127, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (23971, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (30242, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (32211, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (33607, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (36472, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (38424, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (38443, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (42515, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (43574, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (54574, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (47700, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (54949, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (58875, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (59785, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (69181, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (69392, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (73262, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (74996, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (75028, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (80517, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (81084, 0, 0.0, 0.0); 
+INSERT INTO fima.lljpolicy_income VALUES
+    (102419, 0, 0.0, 0.0); 
 
 alter table fima.lljpolicy_income add primary key (llj_id);
 
-update fima.llj_income
+update fima.lljpolicy_income
 set income = 0.0 where income is null;
 
 
