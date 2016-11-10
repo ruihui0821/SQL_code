@@ -1,0 +1,34 @@
+
+US_accumulative_monthly_#claims_capita
+
+cd Downloads/Time_Manager/US_accumulative_monthly_#claims_capita
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_faster.mp4
+
+
+US_accumulative_monthly_payclaims_capita
+
+cd Downloads/Time_Manager/US_accumulative_monthly_payclaims_capita
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_faster.mp4
+
+US_accumulative_monthly_#claims_hectare
+
+cd Downloads/Time_Manager/US_accumulative_monthly_#claims_hectare
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare_faster.mp4
+
+
+US_accumulative_monthly_payclaims_hectare
+
+cd Downloads/Time_Manager/US_accumulative_monthly_payclaims_hectare
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_faster.mp4
