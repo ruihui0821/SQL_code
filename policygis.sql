@@ -1,7 +1,8 @@
---create or replace function create_llgrid() RETURNS BOOLEAN
+-create or replace function create_llgrid() RETURNS BOOLEAN
 --LANGUAGE PLPGSQL AS $$
 --BEGIN
 
+drop table public.llgridpolicy;
 create table public.llgridpolicy (
  llgrid_id serial,
  gis_longi decimal(6,1),
@@ -24,17 +25,12 @@ from g;
 
 CREATE INDEX llgrid_boundary ON public.llgridpolicy USING GIST (boundary );
 
+-- not making
 create table public.llgridpolicy_state as select llgrid_id,j_statefp10 from llgridpolicy g join jurisdictions j on (st_within(st_centroid(g.boundary),j.boundary));
 
 --END;
 --$$;
 
-
--- Modifications to fima.jurisdictions to make it nice;
-alter table fima.jurisdictions rename objectid to jurisdiction_id;
-alter table fima.jurisdictions add boundary geometry('MULTIPOLYGON',4326);
-update fima.jurisdictions set boundary=st_transform(wkb_geometry,4326);
-CREATE INDEX jursidictions_boundary ON fima.jurisdictions USING GIST (boundary );
 
 drop table fima.lljpolicy;
 create table fima.lljpolicy as
@@ -69,7 +65,6 @@ select
 update fima.lljpolicy_population
 set pop10 = 999999999999
 where pop10 = 0;
-
 
 
 
