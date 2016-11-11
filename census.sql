@@ -355,7 +355,6 @@ alter table fima.lljpolicy_income add primary key (llj_id);
 update fima.lljpolicy_income
 set income = 0.0 where income is null;
 
-
 alter table fima.lljpolicy_income add column class character varying(2);
 
 update fima.lljpolicy_income
@@ -401,44 +400,3 @@ class | count
  9     |    12
 
 update summary.policy_yearly_2015_j  set j_pop10  = 9999999999 where j_pop10 = 0;
-
-drop table us.policy_yearly_j_pop10;
-create table us.policy_yearly_j_pop10 as
-select 
-jurisdiction_id,
-year,
-j_pop10,
-boundary,
-count,
-count/cast(j_pop10 as decimal(18,4)) as count_capita,
-t_premium as premium,
-t_premium/cast(j_pop10 as decimal(18,4)) as premium_capita,
-t_cov_bldg, 
-t_cov_cont,
-(t_cov_bldg + t_cov_cont) as t_cov,
-(t_cov_bldg + t_cov_cont)/cast(j_pop10 as decimal(18,4)) as t_cov_capita,
-j.income,
-j.class
-from summary.policy_yearly_2015_j
-join fima.j_income j using (jurisdiction_id)
-order by 1,2;
-
-
-drop table us.policy_yearly_llj_pop10;
-create table us.policy_yearly_llj_pop10 as
-select 
-llj_id,
-year,
-lp.pop10,
-boundary,
-count,
-count/lp.pop10 as count_capita, 
-t_premium/lp.pop10 as premium_capita,
-t_premium as premium,
-(t_cov_bldg + t_cov_cont) as t_cov,
-j.income,
-j.class
-from summary.policy_yearly_2015_llj
-full outer join fima.lljpolicy_income j using (llj_id)
-full outer join fima.lljpolicy_population lp using (llj_id)
-order by 1,2;
