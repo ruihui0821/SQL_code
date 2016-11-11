@@ -233,7 +233,10 @@ order by s.llj_id, s.sdate;
 
 alter table summary.policy_monthlyeff_2015_llj alter column effdate type date;
 
--- Check all months
+alter table summary.policy_monthlyeff_2015_llj
+add primary key (llj_id,effdate);
+
+-- Check if data exists for all months, and the correlation as well
 select p.effdate, corr(p.count, j.income) 
 from summary.policy_monthlyeff_2015_llj p, fima.lljpolicy_income j 
 where p.llj_id = j.llj_id 
