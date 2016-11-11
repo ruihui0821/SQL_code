@@ -68,7 +68,7 @@ t_premium*rate as t_premium,
 t_cov_bldg*rate as t_cov_bldg,
 t_cov_cont*rate as t_cov_cont,
 to_year as dollars_in
-from s join inflation i on (i.from_year=s.year)
+from s join public.inflation i on (i.from_year=s.year)
 where i.to_year=2015
 order by 1,2,3,4,5;
 
@@ -88,9 +88,9 @@ with s as (
  sum(t_cov_bldg) as t_cov_bldg,
  sum(t_cov_cont) as t_cov_cont
  from public.allpolicy a
- join llgridpolicy g using (gis_longi,gis_lati)
- join fima.jurisdictions j using (jurisdiction_id)
- join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
+ --join public.llgridpolicy g using (gis_longi,gis_lati)
+ --join fima.jurisdictions j using (jurisdiction_id)
+ --join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
  group by 1,2
  order by 1,2
 ),
@@ -107,7 +107,7 @@ s.t_premium*rate as t_premium,
 s.t_cov_bldg*rate as t_cov_bldg,
 s.t_cov_cont*rate as t_cov_cont
 from s join j using (llj_id)
-join inflation i on (s.year=i.from_year)
+join public.inflation i on (s.year=i.from_year)
 where i.to_year=2015;
 
 alter table summary.policy_yearly_2015_llj add primary key (llj_id,year);
@@ -127,7 +127,7 @@ with s as (
  sum(t_cov_bldg) as t_cov_bldg,
  sum(t_cov_cont) as t_cov_cont
  from public.allpolicy a
- --join llgridpolicy g using (gis_longi,gis_lati)
+ --join public.llgridpolicy g using (gis_longi,gis_lati)
  --join fima.jurisdictions j using (jurisdiction_id)
  --join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
  group by 1,2,3,4,5
@@ -187,7 +187,7 @@ s.spremium - e.epremium as premium,
 s.st_cov_bldg - e.et_cov_bldg as t_cov_bldg,
 s.st_cov_cont - e.et_cov_cont as t_cov_cont
 from s 
-full outer join e using (llj_id, date)
+join e using (llj_id, date)
 order by s.llj_id, s.date desc;
 
 alter table summary.policy_dailyeff_2015_llj alter column effdate type date;
@@ -228,7 +228,7 @@ s.spremium - e.epremium as premium,
 s.st_cov_bldg - e.et_cov_bldg as t_cov_bldg,
 s.st_cov_cont - e.et_cov_cont as t_cov_cont
 from s 
-full outer join e on (s.llj_id = e.llj_id) and (s.sdate = e.edate)
+join e on (s.llj_id = e.llj_id) and (s.sdate = e.edate)
 order by s.llj_id, s.sdate;
 
 alter table summary.policy_monthlyeff_2015_llj alter column effdate type date;
@@ -254,7 +254,7 @@ sum(t_premium) as t_premium,
 sum(t_cov_bldg) as t_cov_bldg,
 sum(t_cov_cont) as t_cov_cont
 from public.allpolicy a
-join llgrid g using (gis_longi,gis_lati)
+join public.llgrid g using (gis_longi,gis_lati)
 left join fima.jurisdictions j using (jurisdiction_id)
 left join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
 where lj is null
