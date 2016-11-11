@@ -127,9 +127,9 @@ with s as (
  sum(t_cov_bldg) as t_cov_bldg,
  sum(t_cov_cont) as t_cov_cont
  from public.allpolicy a
- join llgridpolicy g using (gis_longi,gis_lati)
- join fima.jurisdictions j using (jurisdiction_id)
- join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
+ --join llgridpolicy g using (gis_longi,gis_lati)
+ --join fima.jurisdictions j using (jurisdiction_id)
+ --join fima.lljpolicy lj using (jurisdiction_id,llgrid_id)
  group by 1,2,3,4,5
  order by 1,2,3,4,5)
 select
@@ -143,12 +143,12 @@ t_premium*rate as t_premium,
 t_cov_bldg*rate as t_cov_bldg,
 t_cov_cont*rate as t_cov_cont,
 to_year as dollars_in
-from s join inflation i on (i.from_year=s.year)
+from s join public.inflation i on (i.from_year=s.year)
 where i.to_year=2015
 order by 1,2,3,4,5;
 
 alter table summary.policy_dailynew_2015_llj
-add primary key (llj_id,end_eff_dt, year,month,day);
+add primary key (llj_id,end_eff_dt);
 
 --2.2 daily effective policy, rolling 12 months
 -- not making yet
@@ -192,6 +192,7 @@ order by s.llj_id, s.date desc;
 
 alter table summary.policy_dailyeff_2015_llj alter column effdate type date;
 
+
 --2.3 monthly effective policy, rolling 12 months
 drop table summary.policy_monthlyeff_2015_llj;
 create table summary.policy_monthlyeff_2015_llj as 
@@ -202,7 +203,7 @@ WITH s AS (
   SUM(b.t_premium) AS spremium,
   SUM(b.t_cov_bldg) AS st_cov_bldg,
   SUM(b.t_cov_cont) AS st_cov_cont,
-  d.as_of_date - interval '1 day' AS sdate 
+  d.as_of_date AS sdate 
   FROM GENERATE_SERIES('1994-01-01'::timestamp, '2015-01-01'::timestamp, interval '1 month') d (as_of_date)
   LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt < d.as_of_date
   GROUP BY b.llj_id, d.as_of_date
@@ -214,14 +215,14 @@ e AS (
   SUM(b.t_premium) AS epremium,
   SUM(b.t_cov_bldg) AS et_cov_bldg,
   SUM(b.t_cov_cont) AS et_cov_cont,
-  d.as_of_date - interval '1 day' + interval '1 year' as edate 
+  d.as_of_date + interval '1 year' as edate 
   FROM GENERATE_SERIES('1993-01-01'::timestamp, '2014-01-01'::timestamp, interval '1 month') d (as_of_date)
   LEFT JOIN summary.policy_dailynew_2015_llj b ON b.end_eff_dt < d.as_of_date
   GROUP BY b.llj_id, d.as_of_date
   ORDER BY b.llj_id, d.as_of_date)
 select
 s.llj_id,
-s.sdate as effdate,
+s.sdate- interval '1 day' as effdate,
 s.scount - e.ecount as count,
 s.spremium - e.epremium as premium,
 s.st_cov_bldg - e.et_cov_bldg as t_cov_bldg,
@@ -231,6 +232,12 @@ full outer join e on (s.llj_id = e.llj_id) and (s.sdate = e.edate)
 order by s.llj_id, s.sdate;
 
 alter table summary.policy_monthlyeff_2015_llj alter column effdate type date;
+
+-- Check all months
+select p.effdate, corr(p.count, j.income) 
+from summary.policy_monthlyeff_2015_llj p, fima.lljpolicy_income j 
+where p.llj_id = j.llj_id 
+group by 1 order by 1;
 
 -- 3. NOT MAKING YET
 drop table summary.policy_monthly_summary_llgrid;
