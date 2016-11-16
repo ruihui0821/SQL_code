@@ -400,3 +400,34 @@ class | count
  9     |    12
 
 update summary.policy_yearly_2015_j  set j_pop10  = 9999999999 where j_pop10 = 0;
+
+-- hhtp://obamacarefacts.com/federal-poverty-level/
+-- 2014 Federal Poverty Guidelines – 48 Contiguous States & DC
+-- Persons in Household: 4
+-- 2014 Federal Poverty Level threshold 100% FPL: $23,850
+-- 2014 POVERTY GUIDELINES – ALASKA: $29,820  FIPS Code 02
+-- 2014 POVERTY GUIDELINES – HAWAII: $27,430  FIPS Code 15
+
+update fima.lljpolicy_income
+set class = 99;
+
+update fima.lljpolicy_income li
+set class = 1 
+where li.income <= 29820 and 
+li.llj_id in (
+  select l.llj_id 
+  from fima.lljpolicy l, fima.jurisdictions j
+  where l.jurisdiction_id = j.jurisdiction_id and j.j_statefp10 = '02');
+
+update fima.lljpolicy_income li
+set class = 1 
+where li.income <= 27430 and 
+li.llj_id in (
+  select l.llj_id 
+  from fima.lljpolicy l, fima.jurisdictions j
+  where l.jurisdiction_id = j.jurisdiction_id and j.j_statefp10 = '15');
+
+update fima.lljpolicy_income li
+set class = 1 
+where li.income <= 23850 and li.class = '99';
+
