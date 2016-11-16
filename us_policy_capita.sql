@@ -1,5 +1,6 @@
 set search_path=us,summary,fima,public;
-
+ 
+ 
 -- 1. annual per capita
 drop table us.policy_yearly_2015_llj_pop10;
 create table us.policy_yearly_2015_llj_pop10
@@ -101,22 +102,30 @@ join fima.lljpolicy_population ljp using (llj_id);
 drop table us.policy_monthlyeff_2015_llj_pop10;
 create table us.policy_monthlyeff_2015_llj_pop10 as
 select
- llj_id,
- effdate,
- ljp.pop10 as population,
- count/ljp.pop10 as count_capita,
- premium/ljp.pop10 as premium_capita,
- t_cov_bldg/ljp.pop10 as t_cov_bldg_capita,
- t_cov_cont/ljp.pop10 as t_cov_cont_capita,
- (t_cov_bldg+t_cov_cont)/ljp.pop10 as t_cov_capita,
- extract(epoch from (effdate + interval '1 day' - interval '1 month') ) as epoch_start,
- extract(epoch from (effdate ) ) as epoch_end,
- lj.boundary
+llj_id,
+effdate,
+ljp.pop10 as population,
+count,
+count/ljp.pop10 as count_capita,
+premium,
+premium/ljp.pop10 as premium_capita,
+t_cov_bldg/ljp.pop10 as t_cov_bldg_capita,
+t_cov_cont/ljp.pop10 as t_cov_cont_capita,
+(t_cov_bldg+t_cov_cont) as t_cov,
+(t_cov_bldg+t_cov_cont)/ljp.pop10 as t_cov_capita,
+extract(epoch from (effdate + interval '1 day' - interval '1 month') ) as epoch_start,
+extract(epoch from (effdate ) ) as epoch_end,
+lj.boundary,
+j.income,
+j.class
 from summary.policy_monthlyeff_2015_llj s
 join fima.lljpolicy lj using (llj_id)
 --join fima.jurisdictions j using (jurisdiction_id)
 join fima.lljpolicy_population ljp using (llj_id)
+join fima.lljpolicy_income j using (llj_id)
 where count > 1.0e-010;
+
+alter table us.policy_monthlyeff_2015_llj_pop10 add primary key (llj_id, effdate);
 
 select effdate, max(count_capita) from us.policy_monthlyeff_2015_llj_pop10 group by 1 order by 2 desc limit 5;
 
