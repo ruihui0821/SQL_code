@@ -408,6 +408,36 @@ update summary.policy_yearly_2015_j  set j_pop10  = 9999999999 where j_pop10 = 0
 -- 2014 POVERTY GUIDELINES – ALASKA: $29,820  FIPS Code 02
 -- 2014 POVERTY GUIDELINES – HAWAII: $27,430  FIPS Code 15
 
+update fima.llj_income
+set class = 99;
+
+update fima.llj_income li
+set class = 1 
+where li.income <= 29820 and 
+li.llj_id in (
+  select l.llj_id 
+  from fima.llj l, fima.jurisdictions j
+  where l.jurisdiction_id = j.jurisdiction_id and j.j_statefp10 = '02');
+
+update fima.llj_income li
+set class = 1 
+where li.income <= 27430 and 
+li.llj_id in (
+  select l.llj_id 
+  from fima.llj l, fima.jurisdictions j
+  where l.jurisdiction_id = j.jurisdiction_id and j.j_statefp10 = '15');
+
+update fima.llj_income li
+set class = 1 
+where li.income <= 23850 and li.class = '99';
+
+select class, count(*) from llj_income group by 1 order by 1;
+ class | count  
+-------+--------
+ 1     |    591
+ 99    |  70251
+ 
+
 update fima.lljpolicy_income
 set class = 99;
 
@@ -431,3 +461,8 @@ update fima.lljpolicy_income li
 set class = 1 
 where li.income <= 23850 and li.class = '99';
 
+select class, count(*) from lljpolicy_income group by 1 order by 1;
+ class | count  
+-------+--------
+ 1     |    836
+ 99    | 110650
