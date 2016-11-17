@@ -17,7 +17,6 @@ t_cov_cont/ljp.pop10 as t_cov_cont_capita,
 (t_cov_bldg+t_cov_cont) as t_cov,
 (t_cov_bldg+t_cov_cont)/ljp.pop10 as t_cov_capita,
 j.income,
-j.class,
 extract(epoch from (year||'-01-01')::date) as epoch_start,
 extract(epoch from (year||'-12-31')::date) as epoch_end,
 boundary
@@ -56,7 +55,6 @@ t_cov_cont/cast(j_pop10 as decimal(18,4)) as t_cov_cont_capita,
 (t_cov_bldg+t_cov_cont) as t_cov,
 (t_cov_bldg + t_cov_cont)/cast(j_pop10 as decimal(18,4)) as t_cov_capita,
 j.income,
-j.class,
 boundary
 from summary.policy_yearly_2015_j
 join fima.j_income j using (jurisdiction_id)
@@ -116,8 +114,7 @@ t_cov_cont/ljp.pop10 as t_cov_cont_capita,
 extract(epoch from (effdate + interval '1 day' - interval '1 month') ) as epoch_start,
 extract(epoch from (effdate ) ) as epoch_end,
 lj.boundary,
-j.income,
-j.class
+j.income
 from summary.policy_monthlyeff_2015_llj s
 join fima.lljpolicy lj using (llj_id)
 --join fima.jurisdictions j using (jurisdiction_id)
