@@ -65,7 +65,13 @@ mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_mon
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_faster.mp4
 
 
+US_monthly_effective_#policy_capita_lowincome
 
+cd Downloads/Time_Manager/US_monthly_effective_#policy_capita_lowincome
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_faster.mp4
 
 
 
