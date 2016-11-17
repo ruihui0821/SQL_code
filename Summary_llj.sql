@@ -1,10 +1,10 @@
 set search_path=summary,fima,public,us,ca;
--- ratios of policy premium to claims payment by llj, for low income group
+-- ratios of policy premium to claims payment by llj, for poverty group
 -- according to llj_id column
 
 -- 1.
-drop table summary.policy_claims_yearly_2015_low;
-create table summary.policy_claims_yearly_2015_low as
+drop table summary.policy_claims_yearly_2015_poverty;
+create table summary.policy_claims_yearly_2015_poverty as
 with cs as (
   select 
     c.year,
@@ -47,37 +47,37 @@ from cs
 full outer join ps using(year)
 order by 1;
 
-alter table summary.policy_claims_yearly_2015_low add primary key(year);
+alter table summary.policy_claims_yearly_2015_poverty add primary key(year);
 
 with c as (
   select sum(pay) as pay 
-  from summary.policy_claims_yearly_2015_low
+  from summary.policy_claims_yearly_2015_poverty
   where year>=1994 and year<=2014),
 cs as ( 
   select
   sum(pc.pay) as pay
-  from summary.policy_claims_yearly_2015_low pc
+  from summary.policy_claims_yearly_2015_poverty pc
   where pc.year>=1994 and 
         pc.year<=2014 and 
         pc.year not in ( 
         select 
         pcc.year
-        from summary.policy_claims_yearly_2015_low pcc
+        from summary.policy_claims_yearly_2015_poverty pcc
         where pcc.year>=1994 and pcc.year<=2014 order by pcc.pay desc limit 1) ),  
 p as (
   select sum(premium) as premium 
-  from summary.policy_claims_yearly_2015_low
+  from summary.policy_claims_yearly_2015_poverty
   where year>=1994 and year<=2014),
 ps as (
   select 
   sum(pc.premium) as premium
-  from summary.policy_claims_yearly_2015_low pc
+  from summary.policy_claims_yearly_2015_poverty pc
   where pc.year>=1994 and 
         pc.year<=2014 and 
         pc.year not in ( 
         select 
         pcc.year
-        from summary.policy_claims_yearly_2015_low pcc
+        from summary.policy_claims_yearly_2015_poverty pcc
         where pcc.year>=1994 and pcc.year<=2014 order by pcc.pay desc limit 1) )
 select
 p.premium, 
@@ -93,14 +93,14 @@ from p, c, ps, cs;
 ----------------+------------------+------------------+-----------------+------------------+------------------
  552720746.3464 | 221420289.624739 | 2.49625157334563 |  531018782.2453 | 174502165.814638 | 3.04304980838671
 
-drop table us.policy_monthlyeff_2015_llj_pop10_lowincome;
-create table us.policy_monthlyeff_2015_llj_pop10_lowincome as
+drop table us.policy_monthlyeff_2015_llj_pop10_poverty;
+create table us.policy_monthlyeff_2015_llj_pop10_poverty as
 select *
 from us.policy_monthlyeff_2015_llj_pop10
-where class = '1';
+where poverty = 'Y';
 
-drop table us.claims_accum_monthly_2015_llj_pop10_lowincome;
-create table us.claims_accum_monthly_2015_llj_pop10_lowincome as
+drop table us.claims_accum_monthly_2015_llj_pop10_poverty;
+create table us.claims_accum_monthly_2015_llj_pop10_poverty as
 select c.* 
 from us.claims_accum_monthly_2015_llj_pop10 c, fima.llj_income j
-where c.llj_id = j.llj_id and j.class = '1';
+where c.llj_id = j.llj_id and j.poverty = 'Y';
