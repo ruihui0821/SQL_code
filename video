@@ -1,5 +1,7 @@
+------------------------------------------------------------------------------------------------------------------------------------------
+Videos for claims
 
-US_accumulative_monthly_#claims_capita
+1. US_accumulative_monthly_#claims_capita
 
 cd Downloads/Time_Manager/US_accumulative_monthly_#claims_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_slow.mp4
@@ -8,7 +10,7 @@ mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Acc
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_faster.mp4
 
 
-US_accumulative_monthly_payclaims_capita
+2. US_accumulative_monthly_payclaims_capita
 
 cd Downloads/Time_Manager/US_accumulative_monthly_payclaims_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_slow.mp4
@@ -16,7 +18,7 @@ mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Acc
 mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_fast.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_faster.mp4
 
-US_accumulative_monthly_#claims_hectare
+3. US_accumulative_monthly_#claims_hectare
 
 cd Downloads/Time_Manager/US_accumulative_monthly_#claims_hectare
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare_slow.mp4
@@ -25,7 +27,7 @@ mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Acc
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_hectare_faster.mp4
 
 
-US_accumulative_monthly_payclaims_hectare
+4. US_accumulative_monthly_payclaims_hectare
 
 cd Downloads/Time_Manager/US_accumulative_monthly_payclaims_hectare
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_slow.mp4
@@ -33,21 +35,23 @@ mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Acc
 mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_fast.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_hectare_faster.mp4
 
+------------------------------------------------------------------------------------------------------------------------------------------
+Videos for policy
 
-US_annual_#policy_capita
+1. US_annual_#policy_capita
 
 cd Downloads/Time_Manager/US_annual_#policy_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Annual_#policy_capita_slow.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=0.5:type=png -ovc copy -oac copy -o US_Annual_#policy_capita_slower.mp4
 
-US_annual_premium_capita
+2. US_annual_premium_capita
 
 cd Downloads/Time_Manager/US_annual_premium_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Annual_premium_capita_slow.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=0.5:type=png -ovc copy -oac copy -o US_Annual_premium_capita_slower.mp4
 
 
-US_monthly_effective_#policy_capita
+3. US_monthly_effective_#policy_capita
 
 cd Downloads/Time_Manager/US_monthly_effective_#policy_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_slow.mp4
@@ -56,7 +60,7 @@ mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_mon
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_faster.mp4
 
 
-US_monthly_effective_premium_capita
+4. US_monthly_effective_premium_capita
 
 cd Downloads/Time_Manager/US_monthly_effective_premium_capita
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_slow.mp4
@@ -64,8 +68,18 @@ mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_mon
 mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_fast.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_faster.mp4
 
+------------------------------------------------------------------------------------------------------------------------------------------
+Videos for claims/policy for lowincome group
 
-US_monthly_effective_#policy_capita_lowincome
+0. US_monthly_effective_#policy_capita_poverty
+
+cd Downloads/Time_Manager/US_monthly_effective_#policy_capita_lowincome
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_poverty_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_poverty.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_poverty_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_poverty_faster.mp4
+
+1. US_monthly_effective_#policy_capita_lowincome
 
 cd Downloads/Time_Manager/US_monthly_effective_#policy_capita_lowincome
 mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_slow.mp4
@@ -73,7 +87,30 @@ mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_mon
 mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_fast.mp4
 mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_#policy_capita_lowincome_faster.mp4
 
+2. US_monthly_effective_premium_capita_lowincome
+
+cd Downloads/Time_Manager/US_monthly_effective_premium_capita_lowincome
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_lowincome_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_lowincome.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_lowincome_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_monthly_effective_premium_capita_lowincome_faster.mp4
 
 
+3. US_accumulative_monthly_#claims_capita_lowincome
+
+cd Downloads/Time_Manager/US_accumulative_monthly_#claims_capita_lowincome
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_lowincome_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_lowincome.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_lowincome_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_#claims_capita_lowincome_faster.mp4
+
+
+4. US_accumulative_monthly_payclaims_capita_lowincome
+
+cd Downloads/Time_Manager/US_accumulative_monthly_payclaims_capita_lowincome
+mencoder mf://*.png -mf w=640:h=480:fps=1:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_lowincome_slow.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=2:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_lowincome.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=5:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_lowincome_fast.mp4
+mencoder mf://*.png -mf w=640:h=480:fps=10:type=png -ovc copy -oac copy -o US_Accumulative_Monthly_payclaims_capita_lowincome_faster.mp4
 
 
