@@ -4,18 +4,16 @@ drop table ca.capaidclaims;
 create table ca.capaidclaims as
 select pc.*
 from public.paidclaims pc
-join fima.jurisdictions j using (jurisdiction_id)
-where j.j_statefp10 = '06' or pc.re_state = 'CA';
+where pc.re_state = 'CA';
 
 alter table ca.capaidclaims
-add primary key (gid,pcid);
+add primary key (pcid);
 
 drop table ca.caallpolicy;
 create table ca.caallpolicy as
 select ap.*
 from public.allpolicy ap
-join fima.jurisdictions j using (jurisdiction_id)
-where j.j_statefp10 = '06' or ap.re_state = 'CA';
+where ap.re_state = 'CA';
 
 alter table ca.caallpolicy
 add primary key (apid);
@@ -175,9 +173,9 @@ sum(pay_bldg+pay_cont) as pay,
 sum(pay_icc) as pay_icc,
 avg(waterdepth)::decimal(6,2) as waterdepth
 from ca.capaidclaims
-join llgrid g using (gis_longi,gis_lati)
-join fima.jurisdictions j using (jurisdiction_id)
-join fima.llj lj using (jurisdiction_id,llgrid_id)
+--join llgrid g using (gis_longi,gis_lati)
+--join fima.jurisdictions j using (jurisdiction_id)
+--join fima.llj lj using (jurisdiction_id,llgrid_id)
 group by 1,2,3
 order by 1,2,3;
 
@@ -320,6 +318,7 @@ join fima.llj lj using (llj_id)
 join fima.jurisdictions j using (jurisdiction_id)
 order by 1, 2;
 
+-- not making
 drop table ca.ca_claims_llj;
 create table ca.ca_claims_llj
 as select
@@ -459,23 +458,26 @@ set fzone = 'D'
 where substr(flood_zone,1,1) IN ('D');
 
 with s as (
- select extract(year from dt_of_loss) as year, sum(pay_cont) as pay
+ select extract(year from dt_of_loss) as year, count(*), sum(pay_cont) as pay
  from ca.capaidclaims c
+ where fzone = 'A'
  group by 1
  order by 1)
-select pay from s order by year;
+select * from s order by year;
 
-select sum(t_premium) 
+select sum(condo_unit) 
 from ca.caallpolicy p
 where end_eff_dt >= '1994-01-01' and end_eff_dt <= '2014-12-31';
 
-select count(*), sum(pay_bldg+pay_cont) 
+select count(*)
 from ca.capaidclaims c
 where dt_of_loss >= '1994-01-01' and dt_of_loss <= '2014-12-31'
 and substr(flood_zone,1,1) IN ('A');
 
 -- Data summary by Valley
-select sum(count) 
+select 
+year,
+sum(count) 
 from ca.ca_claims_monthly_summary_2015_j c
 group by year
 order by year;
