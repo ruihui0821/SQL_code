@@ -43,16 +43,16 @@ set verylowincome = (
   from fima.j_income jj
   where jj.jurisdiction_id = j.jurisdiction_id);
 
-alter table fima.j_income add column lowmedincome double precision;
+alter table fima.j_income add column lowmiddleincome double precision;
 update fima.j_income j
-set lowmedincome = (
+set lowmiddleincome = (
   select 1.2*jj.income 
   from fima.j_income jj
   where jj.jurisdiction_id = j.jurisdiction_id);
   
 ----------------------------------------------------------------------------------------------------------------------------------------
 -- llj table for claims data (70842 rows), classify the poverty, low-income and very-low income based on jurisdiction level medium household income
--- adding low-medium-income as a 120% of jurisdiction level medium household income
+-- adding low-middle-income as a 120% of jurisdiction level medium household income
 alter table fima.llj_income add column poverty character varying(1);
 update fima.llj_income j
 set poverty = 'Y' 
@@ -119,24 +119,24 @@ select verylowincome, count(*), count(*)/70842.0*100 as percent from fima.llj_in
  Y             |   117 |  0.16515626323367493900
  N             | 70725 | 99.83484373676632506100
 
-alter table fima.llj_income add column lowmedincome character varying(1);
+alter table fima.llj_income add column lowmiddleincome character varying(1);
 update fima.llj_income j
-set lowmedincome = 'Y' 
+set lowmiddleincome = 'Y' 
 where j.income <= (
-  select jj.lowmedincome 
+  select jj.lowmiddleincome 
   from fima.j_income jj, fima.llj l
   where jj.jurisdiction_id = l.jurisdiction_id and
   l.llj_id = j.llj_id);
 update fima.llj_income j
-set lowmedincome = 'N' 
+set lowmiddleincome = 'N' 
 where j.income > (
-  select jj.lowmedincome 
+  select jj.lowmiddleincome 
   from fima.j_income jj, fima.llj l
   where jj.jurisdiction_id = l.jurisdiction_id and
   l.llj_id = j.llj_id);
 
-select lowmedincome, count(*), count(*)/70842.0*100 as percent from fima.llj_income group by 1;
- lowmedincome | count |         percent         
+select lowmiddleincome, count(*), count(*)/70842.0*100 as percent from fima.llj_income group by 1;
+ lowmiddleincome | count |         percent         
 --------------+-------+-------------------------
  Y            | 64927 | 91.65043335874198921500
  N            |  5915 |  8.34956664125801078500
@@ -212,24 +212,24 @@ select verylowincome, count(*), count(*)/111486.0*100 as percent from fima.lljpo
  N             | 111321 | 99.85199935417900005400
 
 
-alter table fima.lljpolicy_income add column lowmedincome character varying(1);
+alter table fima.lljpolicy_income add column lowmiddleincome character varying(1);
 update fima.lljpolicy_income j
-set lowmedincome = 'Y' 
+set lowmiddleincome = 'Y' 
 where j.income <= (
-  select jj.lowmedincome 
+  select jj.lowmiddleincome 
   from fima.j_income jj, fima.lljpolicy l
   where jj.jurisdiction_id = l.jurisdiction_id and
   l.llj_id = j.llj_id);
 update fima.lljpolicy_income j
-set lowmedincome = 'N' 
+set lowmiddleincome = 'N' 
 where j.income > (
-  select jj.lowmedincome 
+  select jj.lowmiddleincome 
   from fima.j_income jj, fima.lljpolicy l
   where jj.jurisdiction_id = l.jurisdiction_id and
   l.llj_id = j.llj_id);
 
-select lowmedincome, count(*), count(*)/111486.0*100 as percent from fima.lljpolicy_income group by 1;
-  lowmedincome | count  |         percent         
+select lowmiddleincome, count(*), count(*)/111486.0*100 as percent from fima.lljpolicy_income group by 1;
+  lowmiddleincome | count  |         percent         
 --------------+--------+-------------------------
  Y            | 103054 | 92.43671851174138456800
  N            |   8432 |  7.56328148825861543200
