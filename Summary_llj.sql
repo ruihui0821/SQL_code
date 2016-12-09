@@ -276,9 +276,9 @@ from p, c, ps, cs;
  65097524.2441 | 91501295.565603 | 0.711438279006963 |   63056524.8649 | 74064621.951075 | 0.851371723824546
  
 -------------------------------------------------------------------------------------------------------------------------------------
--- 4. lowmedincome summary
-drop table summary.policy_claims_yearly_2015_lowmedincome;
-create table summary.policy_claims_yearly_2015_lowmedincome as
+-- 4. lowmiddleincome summary
+drop table summary.policy_claims_yearly_2015_lowmiddleincome;
+create table summary.policy_claims_yearly_2015_lowmiddleincome as
 with cs as (
   select 
     c.year,
@@ -290,7 +290,7 @@ with cs as (
     sum(c.t_dmg_cont) as t_dmg_cont,
     sum(c.t_dmg_bldg + c.t_dmg_cont) as t_dmg
   from summary.claims_yearly_2015_llj c, fima.llj_income li
-  where c.llj_id = li.llj_id and li.lowmedincome = 'Y' 
+  where c.llj_id = li.llj_id and li.lowmiddleincome = 'Y' 
   group by 1
   order by 1),
 ps as (
@@ -301,7 +301,7 @@ ps as (
     sum(p.t_cov_bldg) as t_cov_bldg,
     sum(p.t_cov_cont) as t_cov_cont
   from summary.policy_yearly_2015_llj p, fima.lljpolicy_income lpi
-  where p.llj_id = lpi.llj_id and lpi.lowmedincome = 'Y' 
+  where p.llj_id = lpi.llj_id and lpi.lowmiddleincome = 'Y' 
   group by 1
   order by 1)
 select 
@@ -321,37 +321,37 @@ from cs
 full outer join ps using(year)
 order by 1;
 
-alter table summary.policy_claims_yearly_2015_lowmedincome add primary key(year);
+alter table summary.policy_claims_yearly_2015_lowmiddleincome add primary key(year);
 
 with c as (
   select sum(pay) as pay 
-  from summary.policy_claims_yearly_2015_lowmedincome
+  from summary.policy_claims_yearly_2015_lowmiddleincome
   where year>=1994 and year<=2014),
 cs as ( 
   select
   sum(pc.pay) as pay
-  from summary.policy_claims_yearly_2015_lowmedincome pc
+  from summary.policy_claims_yearly_2015_lowmiddleincome pc
   where pc.year>=1994 and 
         pc.year<=2014 and 
         pc.year not in ( 
         select 
         pcc.year
-        from summary.policy_claims_yearly_2015_lowmedincome pcc
+        from summary.policy_claims_yearly_2015_lowmiddleincome pcc
         where pcc.year>=1994 and pcc.year<=2014 order by pcc.pay desc limit 1) ),  
 p as (
   select sum(premium) as premium 
-  from summary.policy_claims_yearly_2015_lowmedincome
+  from summary.policy_claims_yearly_2015_lowmiddleincome
   where year>=1994 and year<=2014),
 ps as (
   select 
   sum(pc.premium) as premium
-  from summary.policy_claims_yearly_2015_lowmedincome pc
+  from summary.policy_claims_yearly_2015_lowmiddleincome pc
   where pc.year>=1994 and 
         pc.year<=2014 and 
         pc.year not in ( 
         select 
         pcc.year
-        from summary.policy_claims_yearly_2015_lowmedincome pcc
+        from summary.policy_claims_yearly_2015_lowmiddleincome pcc
         where pcc.year>=1994 and pcc.year<=2014 order by pcc.pay desc limit 1) )
 select
 p.premium, 
