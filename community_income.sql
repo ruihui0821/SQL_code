@@ -26,9 +26,9 @@ ss.pay,
 jj.j_pop10,
 jj.boundary
 from fima.j_income j
-full outer join fima.jurisdictions jj using(jurisdiction_id)
-full outer join s using(jurisdiction_id)
-full outer join ss using(jurisdiction_id);
+join fima.jurisdictions jj using(jurisdiction_id)
+join s using(jurisdiction_id)
+join ss using(jurisdiction_id);
 
 alter table summary.jurisdiction_income add primary key(jurisdiction_id);
 
@@ -66,7 +66,15 @@ select lowincome, count(*), count(*)/28061.0*100 as percent from summary.jurisdi
 -----------+-------+-------------------------
  Y         |  5958 | 21.23231531306795908900
  N         | 22103 | 78.76768468693204091100
- 
+
+select lowincome, count(*), count(*)/18491.0*100 as percent from summary.jurisdiction_income group by 1;
+
+ lowincome | count |         percent         
+-----------+-------+-------------------------
+ Y         |  3552 | 19.20934508679898328900
+ N         | 14939 | 80.79065491320101671100
+
+
 update summary.jurisdiction_income ji
 set lowmiddleincome = 'Y' 
 where ji.income <= (
@@ -89,4 +97,12 @@ select lowmiddleincome, count(*), count(*)/28061.0*100 as percent from summary.j
 -----------------+-------+-------------------------
  Y               | 23303 | 83.04408253447845764600
  N               |  4758 | 16.95591746552154235400
+
+select lowmiddleincome, count(*), count(*)/18491.0*100 as percent from summary.jurisdiction_income group by 1;
+
+ lowmiddleincome | count |         percent         
+-----------------+-------+-------------------------
+ Y               | 14643 | 79.18987615596776810300
+ N               |  3848 | 20.81012384403223189700
+
 
