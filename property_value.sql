@@ -35,6 +35,46 @@ select
 from public.paidclaims
 where t_prop_val+val_cont > 0;
 
+  count  
+---------
+ 1587995
+ 
 alter table waterdepth_damage_value add primary key (gid);
 
 select corr(paypercent, waterdepth), corr(dmgpercent, waterdepth) from waterdepth_damage_value;
+         corr          |         corr          
+-----------------------+-----------------------
+ 3.26312559673119e-005 | 9.79666446154346e-006
+
+-- paypercent
+select count(*), count(*)/1587995.0, corr(paypercent, waterdepth) from waterdepth_damage_value where dmgpercent <=10;
+  count  |        ?column?        |         corr         
+---------+------------------------+----------------------
+ 1587516 | 0.99969836177066048697 | 0.000298499128653996
+
+select count(*), count(*)/1587995.0, corr(paypercent, waterdepth) from waterdepth_damage_value where dmgpercent <=2;
+  count  |        ?column?        |         corr         
+---------+------------------------+----------------------
+ 1584996 | 0.99811145501087849773 | 0.000283937624060079
+
+select count(*), count(*)/1587995.0, corr(paypercent, waterdepth) from waterdepth_damage_value where dmgpercent <=1;
+  count  |        ?column?        |          corr          
+---------+------------------------+------------------------
+ 1487206 | 0.93653065658267185980 | -3.87183610401184e-005
+
+-- dmgpercent
+select count(*), count(*)/1587995.0, corr(dmgpercent, waterdepth) from waterdepth_damage_value where dmgpercent <=10;
+  count  |        ?column?        |       corr        
+---------+------------------------+-------------------
+ 1587516 | 0.99969836177066048697 | 0.095958648136763
+
+select count(*), count(*)/1587995.0, corr(dmgpercent, waterdepth)  from waterdepth_damage_value where dmgpercent <=2;
+  count  |        ?column?        |       corr       
+---------+------------------------+------------------
+ 1584996 | 0.99811145501087849773 | 0.10012113173859
+
+select count(*), count(*)/1587995.0, corr(dmgpercent, waterdepth) from waterdepth_damage_value where dmgpercent <=1;
+  count  |        ?column?        |       corr        
+---------+------------------------+-------------------
+ 1487206 | 0.93653065658267185980 | 0.075152285329157
+ 
