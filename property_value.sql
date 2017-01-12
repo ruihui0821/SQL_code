@@ -22,5 +22,19 @@ where exists(
   from public.claims c
   where p.gid = c.gid);
   
-  
-  select waterdepth, pay_bldg, pay_cont, pay_bldg+pay_cont as pay, t_prop_val, val_cont, t_prop_val+val_cont as value from claims where pay_bldg >0 and pay_cont >0;
+drop table waterdepth_damage_value;
+create table waterdepth_damage_value as
+select
+  gid,
+  waterdepth, 
+  pay_bldg + pay_cont as pay, 
+  t_dmg_bldg + t_dmg_cont as dmg,
+  t_prop_val + val_cont as value,
+  (pay_bldg + pay_cont)/(t_prop_val + val_cont) as paypercent,
+  (t_dmg_bldg + t_dmg_cont)/(t_prop_val + val_cont) as dmgpercent
+from public.paidclaims
+where t_prop_val+val_cont > 0;
+
+alter table waterdepth_damage_value add primary key (gid);
+
+select corr(paypercent, waterdepth), corr(dmgpercent, waterdepth) from waterdepth_damage_value;
