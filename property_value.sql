@@ -1,3 +1,5 @@
+set search_path = ca,fima,public,us,summary;
+
 -- adding the t_prop_val (val_main + val_app) and the val_cont data from the original claims table to the paidclaims table
 alter table public.paidclaims add column t_prop_val numeric(10,0);
 alter table public.paidclaims add column val_cont integer;
@@ -121,6 +123,7 @@ alter table ca.ca_waterdepth_damage_value_2015 add primary key (gid);
 
 select
 waterdepth,
+count(*),
 sum(pay) as tpay,
 sum(dmg) as tdmg,
 sum(value) as tvalue
