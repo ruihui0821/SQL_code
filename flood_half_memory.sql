@@ -96,8 +96,6 @@ order by 1;
 
 
 
-
-
 WITH s AS (
   SELECT 
   b.cid, 
@@ -106,7 +104,7 @@ WITH s AS (
   d.as_of_date AS sdate 
   FROM GENERATE_SERIES('1994-01-01'::timestamp, '2015-01-01'::timestamp, interval '1 day') d (as_of_date)
   LEFT JOIN summary.policy_dailynew_2015 b ON b.end_eff_dt < d.as_of_date
-  where b.cid in (select n.cid from fima.nation n where county = 'SANTA CLARA COUNTY'and substr(cid, 1, 2) = '06')
+  where b.cid in (select n.cid from fima.nation n where county = 'VENTURA COUNTY'and substr(cid, 1, 2) = '06')
   GROUP BY b.cid, d.as_of_date
   ORDER BY b.cid, d.as_of_date),
 e AS (
@@ -117,7 +115,7 @@ e AS (
   d.as_of_date + interval '1 year' as edate 
   FROM GENERATE_SERIES('1993-01-01'::timestamp, '2014-01-01'::timestamp, interval '1 day') d (as_of_date)
   LEFT JOIN summary.policy_dailynew_2015 b ON b.end_eff_dt < d.as_of_date
-  where b.cid in (select n.cid from fima.nation n where county = 'SANTA CLARA COUNTY' and substr(cid, 1, 2) = '06')
+  where b.cid in (select n.cid from fima.nation n where county = 'VENTURA COUNTY' and substr(cid, 1, 2) = '06')
   GROUP BY b.cid, d.as_of_date
   ORDER BY b.cid, d.as_of_date)
 select
