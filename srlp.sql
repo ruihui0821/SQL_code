@@ -78,7 +78,7 @@ s as (
   sum(prop_value) as prop_value,
   sum(paid) as paid
   from public.srlp
-  where cid not in ('210120','750000')
+  where cid not in ('210120','720000')
   group by 1
   order by 1),
 c as (
@@ -127,3 +127,13 @@ order by 1;
 
 alter table summary.srlp_summary add primary key (cid);
 
+
+select
+j.j_cid,
+sum(j.j_pop10) as population,
+sum(ji.income*j.j_pop10)/sum(j.j_pop10) as income
+from fima.jurisdictions j
+join fima.j_income ji on (j.jurisdiction_id = ji.jurisdiction_id)
+where j.j_cid in ('210120','720000')
+group by 1
+order by 1;
