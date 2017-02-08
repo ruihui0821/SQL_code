@@ -129,8 +129,8 @@ order by s.sdate;
 
 
 -- Louisiana
-drop table ca.fmhl_county_jefferson;
-create table ca.fmhl_county_jefferson as
+drop table ca.fmhl_county;
+create table ca.fmhl_county as
 WITH s AS (
   SELECT 
   b.cid, 
@@ -162,3 +162,36 @@ join e on (s.cid = e.cid) and (s.sdate = e.edate)
 group by s.sdate
 order by s.sdate;
 
+-- New York
+drop table ca.fmhl_county;
+create table ca.fmhl_county as
+WITH s AS (
+  SELECT 
+  b.cid, 
+  SUM(b.count) AS scount, 
+  SUM(b.t_premium) AS spremium,
+  d.as_of_date AS sdate 
+  FROM GENERATE_SERIES('1994-01-01'::timestamp, '2015-01-01'::timestamp, interval '1 day') d (as_of_date)
+  LEFT JOIN summary.policy_dailynew_2015 b ON b.end_eff_dt < d.as_of_date
+  where b.cid in (select n.cid from fima.nation n where county = 'ALBANY COUNTY' and statefp = '36')
+  GROUP BY b.cid, d.as_of_date
+  ORDER BY b.cid, d.as_of_date),
+e AS (
+  SELECT 
+  b.cid, 
+  SUM(b.count) AS ecount,
+  SUM(b.t_premium) AS epremium,
+  d.as_of_date + interval '1 year' as edate 
+  FROM GENERATE_SERIES('1993-01-01'::timestamp, '2014-01-01'::timestamp, interval '1 day') d (as_of_date)
+  LEFT JOIN summary.policy_dailynew_2015 b ON b.end_eff_dt < d.as_of_date
+  where b.cid in (select n.cid from fima.nation n where county = 'ALBANY COUNTY' and statefp = '36')
+  GROUP BY b.cid, d.as_of_date
+  ORDER BY b.cid, d.as_of_date)
+select
+s.sdate- interval '1 day' as effdate,
+sum(s.scount) - sum(e.ecount) as count,
+sum(s.spremium) - sum(e.epremium) as premium
+from s 
+join e on (s.cid = e.cid) and (s.sdate = e.edate)
+group by s.sdate
+order by s.sdate;
