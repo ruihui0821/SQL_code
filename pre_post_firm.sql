@@ -149,9 +149,9 @@ alter table summary.postfirm_policy_state_jurisdiction_2015 add primary key (yea
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
--- PRE & POST SUMMARY FOR STATE
-drop table us.pre_post_firm_state;
-create table us.pre_post_firm_state as
+-- PRE & POST CLAIM SUMMARY FOR STATE
+drop table us.pre_post_firm_claim_state;
+create table us.pre_post_firm_claim_state as
 with pre as(
   select
   year,
@@ -181,11 +181,68 @@ post.count/(pre.count + post.count) as compliance
 from pre
 join post using (year, state);
 
-alter table us.pre_post_firm_state add primary key(year, state);
+alter table us.pre_post_firm_claim_state add primary key(year, state);
+
+-- By state for all years
+create table us.firm_claim_state as
+with pre as(
+  select
+  state,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.prefirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  state,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.postfirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+COALESCE(pre.state, post.state) AS state,
+pre.count as precount,
+pre.pay as prepay,
+post.count as postcount,
+post.pay as postpay,
+post.count/(pre.count + post.count) as compliance
+from pre
+join post using (state)
+order by 1;
+
+-- By year for all states
+with pre as(
+  select
+  year,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.prefirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  year,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.postfirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+COALESCE(pre.year, post.year) AS year,
+pre.count as precount,
+pre.pay as prepay,
+post.count as postcount,
+post.pay as postpay,
+post.count/(pre.count + post.count) as compliance
+from pre
+join post using (year)
+order by 1;
 
 -- PRE & POST SUMMARY FOR COMMUNITY
-drop table us.pre_post_firm_community;
-create table us.pre_post_firm_community as
+drop table us.pre_post_firm_claim_community;
+create table us.pre_post_firm_claim_community as
 with pre as(
   select
   year,
@@ -210,13 +267,50 @@ select
 COALESCE(pre.year, post.year) AS year,
 COALESCE(pre.state, post.state) AS state,
 COALESCE(pre.community, post.community) AS community,
+n.community_name,
+n.county,
 pre.count as precount,
 pre.pay as prepay,
 post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (year, state, community);
+join post using (year, state, community)
+left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid);
 
-alter table us.pre_post_firm_community add primary key(year, state, community);
+alter table us.pre_post_firm_claim_community add primary key(year, state, community);
 
+-- By community for all years
+create table us.fimr_claim_community as
+with pre as(
+  select
+  state,
+  community,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.prefirm_claim_state_jurisdiction_2015
+  group by 1, 2
+  order by 1, 2),
+post as(
+  select
+  state,
+  community,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.postfirm_claim_state_jurisdiction_2015
+  group by 1, 2
+  order by 1, 2)
+select
+COALESCE(pre.state, post.state) AS state,
+COALESCE(pre.community, post.community) AS community,
+n.community_name,
+n.county,
+pre.count as precount,
+pre.pay as prepay,
+post.count as postcount,
+post.pay as postpay,
+post.count/(pre.count + post.count) as compliance
+from pre
+join post using (state, community)
+left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid)
+order by 1, 2;
