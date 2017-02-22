@@ -270,3 +270,25 @@ from s
 join e on (s.cid = e.cid) and (s.sdate = e.edate)
 group by s.sdate
 order by s.sdate;
+
+
+-- count historical claims data for counties in the four examined states:
+alter table summary.claims_yearly_state_jurisdiction_2015 add column county character varying(128);
+update summary.claims_yearly_state_jurisdiction_2015 c
+set county = (select n.county from fima.nation n where n.cid = c.community)
+where exists (select n.county from fima.nation n where n.cid = c.community);
+
+
+select
+state,
+county,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg
+from summary.claims_yearly_state_jurisdiction_2015
+where state in ('CA','LA','NY','IL')
+group by 1,2 order by 1,2;
+
+
+
+
