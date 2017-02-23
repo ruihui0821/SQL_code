@@ -179,11 +179,12 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (year, state);
+full join post using (year, state);
 
 alter table us.pre_post_firm_claim_state add primary key(year, state);
 
 -- By state for all years
+drop table us.firm_claim_state;
 create table us.firm_claim_state as
 with pre as(
   select
@@ -209,7 +210,7 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (state)
+full join post using (state)
 order by 1;
 
 -- By year for all states
@@ -237,10 +238,10 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (year)
+full join post using (year)
 order by 1;
 
--- PRE & POST SUMMARY FOR COMMUNITY
+-- PRE & POST CLAIM SUMMARY FOR COMMUNITY
 drop table us.pre_post_firm_claim_community;
 create table us.pre_post_firm_claim_community as
 with pre as(
@@ -275,13 +276,14 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (year, state, community)
+full join post using (year, state, community)
 left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid);
 
 alter table us.pre_post_firm_claim_community add primary key(year, state, community);
 
 -- By community for all years
-create table us.fimr_claim_community as
+drop table us.firm
+create table us.firm_claim_community as
 with pre as(
   select
   state,
@@ -311,6 +313,52 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-join post using (state, community)
+full join post using (state, community)
 left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid)
 order by 1, 2;
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+-- PRE & POST POLICY SUMMARY FOR COMMUNITY in 2014
+drop table us.pre_post_firm_policy_community;
+create table us.pre_post_firm_policy_community as
+with pre as(
+  select
+  year,
+  state,
+  community,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  where year = 2014
+  group by 1, 2, 3
+  order by 1, 2, 3),
+post as(
+  select
+  year,
+  state,
+  community,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  where year = 2014
+  group by 1, 2, 3
+  order by 1, 2, 3)
+select
+COALESCE(pre.year, post.year) AS year,
+COALESCE(pre.state, post.state) AS state,
+COALESCE(pre.community, post.community) AS community,
+n.community_name,
+n.county,
+pre.count as precount,
+pre.premium as prepremium,
+post.count as postcount,
+post.premium as postpremium,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (year, state, community)
+left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid);
+
+alter table us.pre_post_firm_policy_community add primary key(year, state, community);
+
