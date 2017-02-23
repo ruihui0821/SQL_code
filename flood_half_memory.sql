@@ -275,8 +275,8 @@ order by s.sdate;
 -- count historical claims data for counties in the four examined states:
 alter table summary.claims_yearly_state_jurisdiction_2015 add column county character varying(128);
 update summary.claims_yearly_state_jurisdiction_2015 c
-set county = (select n.county from fima.nation n where n.cid = c.community)
-where exists (select n.county from fima.nation n where n.cid = c.community);
+set county = (select n.county from fima.nation n where n.cid = c.community and n.state = c.state)
+where exists (select n.county from fima.nation n where n.cid = c.community and n.state = c.state);
 
 
 select
