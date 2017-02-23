@@ -247,46 +247,7 @@ create table us.pre_post_firm_claim_community as
 with pre as(
   select
   year,
-  state,
-  community,
-  sum(count) as count,
-  sum(pay) as pay
-  from summary.prefirm_claim_state_jurisdiction_2015
-  group by 1, 2, 3
-  order by 1, 2, 3),
-post as(
-  select
-  year,
-  state,
-  community,
-  sum(count) as count,
-  sum(pay) as pay
-  from summary.postfirm_claim_state_jurisdiction_2015
-  group by 1, 2, 3
-  order by 1, 2, 3)
-select
-COALESCE(pre.year, post.year) AS year,
-COALESCE(pre.state, post.state) AS state,
-COALESCE(pre.community, post.community) AS community,
-n.community_name,
-n.county,
-pre.count as precount,
-pre.pay as prepay,
-post.count as postcount,
-post.pay as postpay,
-post.count/(pre.count + post.count) as compliance
-from pre
-full join post using (year, state, community)
-left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid);
-
-alter table us.pre_post_firm_claim_community add primary key(year, state, community);
-
--- By community for all years
-drop table us.firm
-create table us.firm_claim_community as
-with pre as(
-  select
-  state,
+  --state,
   community,
   sum(count) as count,
   sum(pay) as pay
@@ -295,7 +256,8 @@ with pre as(
   order by 1, 2),
 post as(
   select
-  state,
+  year,
+  --state,
   community,
   sum(count) as count,
   sum(pay) as pay
@@ -303,7 +265,9 @@ post as(
   group by 1, 2
   order by 1, 2)
 select
-COALESCE(pre.state, post.state) AS state,
+COALESCE(pre.year, post.year) AS year,
+--COALESCE(pre.state, post.state) AS state,
+n.state,
 COALESCE(pre.community, post.community) AS community,
 n.community_name,
 n.county,
@@ -313,8 +277,43 @@ post.count as postcount,
 post.pay as postpay,
 post.count/(pre.count + post.count) as compliance
 from pre
-full join post using (state, community)
-left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid)
+full join post using (year, community)
+left outer join fima.nation n on (pre.community = n.cid);
+
+alter table us.pre_post_firm_claim_community add primary key(year, state, community);
+
+-- By community for all years
+drop table us.firm_claim_community;
+create table us.firm_claim_community as
+with pre as(
+  select
+  community,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.prefirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  community,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.postfirm_claim_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+n.state,
+COALESCE(pre.community, post.community) AS community,
+n.community_name,
+n.county,
+pre.count as precount,
+pre.pay as prepay,
+post.count as postcount,
+post.pay as postpay,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (community)
+left outer join fima.nation n on (pre.community = n.cid)
 order by 1, 2;
 
 
@@ -326,28 +325,26 @@ create table us.pre_post_firm_policy_community as
 with pre as(
   select
   year,
-  state,
   community,
   sum(count) as count,
   sum(premium) as premium
   from summary.prefirm_policy_state_jurisdiction_2015
   where year = 2014
-  group by 1, 2, 3
-  order by 1, 2, 3),
+  group by 1, 2
+  order by 1, 2),
 post as(
   select
   year,
-  state,
   community,
   sum(count) as count,
   sum(premium) as premium
   from summary.postfirm_policy_state_jurisdiction_2015
   where year = 2014
-  group by 1, 2, 3
-  order by 1, 2, 3)
+  group by 1, 2
+  order by 1, 2)
 select
 COALESCE(pre.year, post.year) AS year,
-COALESCE(pre.state, post.state) AS state,
+n.state,
 COALESCE(pre.community, post.community) AS community,
 n.community_name,
 n.county,
@@ -357,8 +354,8 @@ post.count as postcount,
 post.premium as postpremium,
 post.count/(pre.count + post.count) as compliance
 from pre
-full join post using (year, state, community)
-left outer join fima.nation n on (pre.state = n.state) and (pre.community = n.cid);
+full join post using (year, community)
+left outer join fima.nation n on (pre.community = n.cid);
 
-alter table us.pre_post_firm_policy_community add primary key(year, state, community);
+alter table us.pre_post_firm_policy_community add primary key(year, community);
 
