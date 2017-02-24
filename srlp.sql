@@ -137,3 +137,86 @@ join fima.j_income ji on (j.jurisdiction_id = ji.jurisdiction_id)
 where j.j_cid in ('210120','720000')
 group by 1
 order by 1;
+
+select j_cid, count(*) from fima.jurisdictions group by 1 order by 2 desc;
+ j_cid  | count 
+--------+-------
+ 000000 |  1008
+ 720000 |    75
+ 210120 |     5
+
+Occupancy Type (occupancy):
+1 - Single-Family
+2 - Two-to-Four-Family
+3 - Other Residential
+4 - Nonresidential
+
+alter table public.allpolicy add column occupancy character varying(1);
+update public.allpolicy a
+set occupancy  = (
+  select occupancy
+  from p2014 p
+  where a.gid = p.gid)
+where a.ptable = 'p2014' and
+exists (
+  select occupancy
+  from p2014 p
+  where a.gid = p.gid);
+
+Rental Property Indicator (rent_prop):
+Indicates if the property is a rental property.
+Y-Yes
+N-No
+
+alter table public.allpolicy add column rent_prop character varying(1);
+update public.allpolicy a
+set rent_prop  = (
+  select rent_prop
+  from p2014 p
+  where a.gid = p.gid)
+where a.ptable = 'p2014' and
+exists (
+  select rent_prop
+  from p2014 p
+  where a.gid = p.gid);
+
+
+drop table us.pilot_community;
+create table us.pilot_community as
+with a as (
+  select 
+  re_community as cid,
+  sum(condo_unit) as count
+  from public.allpolicy
+  where ptable = 'p2014' and 
+  occupancy = '1'
+  group by 1),
+b as (
+  select 
+  re_community as cid,
+  sum(condo_unit) as count
+  from public.allpolicy
+  where ptable = 'p2014' and 
+  rent_prop = 'N'
+  group by 1)
+select 
+s.*,
+c.precount as cprecount,
+c.prepay,
+c.postcount as cpostcount,
+c.postpay,
+c.compliance as ccompliance,
+p.precount as pprecount,
+p.prepremium,
+p.postcount as ppostcount,
+p.postpremium,
+p.compliance as pcompliance,
+a.count as sfcount,
+b.count as owncount
+from summary.srlp_summary s
+join us.firm_claim_community c on (s.cid = c.community)
+join us.pre_post_firm_policy_community p on (s.cid = p.community)
+join a on (a.cid = s.cid)
+join b on (b.cid = s.cid);
+
+
