@@ -101,22 +101,24 @@ p as (
   where community not in ('210120','720000') and year = '2014'
   order by 1)
 select
-s.cid,
-s.count,
-s.proplosses,
-s.prop_value,
-s.paid,
-c.ccount,
-c.pay,
-c.t_dmg,
-p.pcount,
-p.premium,
-p.t_cov,
-j.j_pop10 as population,
-ji.income as income,
 n.state,
+n.county,
+s.cid,
 n.community_name,
-n.county
+s.count as srlp_count,
+s.proplosses as srlp_proplosses,
+s.proplosses/s.count as srlp_avg_proplosses,
+s.prop_value as srlp_prop_value,
+s.paid as srlp_paid,
+s.paid/s.count as srlp_avg_paid,
+c.ccount as allclaims_count,
+c.pay as allclaims_paid,
+c.t_dmg as allclaims_total_damage,
+p.pcount as policy2014_count,
+p.premium as policy2014_premium,
+p.t_cov as policy2014_total_coverage,
+j.j_pop10 as population2010,
+ji.income as median_household_income2015
 from s
 join c on (s.cid = c.community)
 join p on (s.cid = p.community)
@@ -189,7 +191,8 @@ with a as (
   sum(condo_unit) as count
   from public.allpolicy
   where ptable = 'p2014' and 
-  occupancy = '1'
+  occupancy = '1' and
+  re_community not in ('210120','720000')
   group by 1),
 b as (
   select 
@@ -197,26 +200,40 @@ b as (
   sum(condo_unit) as count
   from public.allpolicy
   where ptable = 'p2014' and 
-  rent_prop = 'N'
-  group by 1)
+  rent_prop = 'N' and
+  re_community not in ('210120','720000')
+  group by 1),
+q as (
+  select
+  cid,
+  count(*)
+  from public.srlp
+  where paid >= (prop_value/2) and
+  cid not in ('210120','720000')
+  group by 1
+  order by 1)
 select 
 s.*,
-c.precount as cprecount,
-c.prepay,
-c.postcount as cpostcount,
-c.postpay,
-c.compliance as ccompliance,
-p.precount as pprecount,
-p.prepremium,
-p.postcount as ppostcount,
-p.postpremium,
-p.compliance as pcompliance,
-a.count as sfcount,
-b.count as owncount
+q.count as srlp_paid50_count,
+c.precount as allclaims_prefirm_count,
+c.prepay as allclaims_prefirm_paid,
+c.postcount as allclaims_postfirm_count,
+c.postpay as allclaims_postfirm_paid,
+(1 - c.compliance) as allclaims_prefirm_percent,
+p.precount as policy2014_prefirm_count,
+p.prepremium as policy2014_prefirm_premium,
+p.postcount as policy2014_postfirm_count,
+p.postpremium as policy2014_postfrim_premium,
+(1 - p.compliance) as policy2014_prefirm_percent,
+a.count as policy2014_single_family_count,
+a.count/s.policy2014_count as policy2014_single_family_percent,
+b.count as policy2014_owner_occupied_count,
+b.count/s.policy2014_count as policy2014_onwer_occupied_percent
 from summary.srlp_summary s
 join us.firm_claim_community c on (s.cid = c.community)
 join us.pre_post_firm_policy_community p on (s.cid = p.community)
 join a on (a.cid = s.cid)
-join b on (b.cid = s.cid);
+join b on (b.cid = s.cid)
+join q on (q.cid = s.cid);
 
 
