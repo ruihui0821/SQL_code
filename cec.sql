@@ -4,18 +4,18 @@ alter table cec.canesm2_pr_historical alter column month type character varying(
 alter table cec.canesm2_pr_historical add column time date;
 update cec.canesm2_pr_historical set time = ((year||'-'||CAST(month AS VARCHAR(2))||'-16')::date);
 
-select year, sum(pr) as tpr from cec.canesm2_pr_historical where pr < 1e+020 group by 1 order by 1;
-select year, avg(tmin) as avgtmin from cec.canesm2_tasmin_rcp85 where tmin < 1e+020 group by 1 order by 1;
+update cec.canesm2_pr_historical set month = to_char(time,'MM');
 
-update cec.canesm2_pr_historical
-set lon = -lon;
-alter table cec.canesm2_pr_historical 
-add column latlonpoint point;
+--select year, sum(pr) as tpr from cec.canesm2_pr_historical where pr < 1e+020 group by 1 order by 1;
+--select year, avg(tmin) as avgtmin from cec.canesm2_tasmin_rcp85 where tmin < 1e+020 group by 1 order by 1;
+
+update cec.canesm2_pr_historical set lon = lon - 360;
+alter table cec.canesm2_pr_historical add column geom geometry;
 UPDATE cec.canesm2_pr_historical 
-SET latlonpoint=ST_SetSRID(ST_MakePoint(lon, lat),4326)::point;
+SET geom=ST_SetSRID(ST_MakePoint(lon, lat),4326)::geometry;
 
-ST_SetSRID(ST_MakePoint(lon, lat),4326)::geometry
 
+--- 1.1 Aggregated table for historical precipitation
 drop table cec.canesm2_pr_historical_cvpm;
 create table cec.canesm2_pr_historical_cvpm as
 select
@@ -24,27 +24,108 @@ p.year,
 p.month, 
 avg(p.pr) as avgpr
 from cec.canesm2_pr_historical p, cec.cvpm_area c
-where ST_Intersects(p.latlonpoint::geometry,c.geom::geometry) 
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.pr < 1e+020
-and c.cvpm = '1' and p.year = '1950' and month = '12'
+--and c.cvpm = '1' and p.year = '1950' and month = '12'
 group by 1, 2, 3
 order by 1, 2, 3;
 
 
-ST_GeometryFromText(p.lat, p.lon)
-ST_Transform(c.geom,4326)
+---1.2 Aggregated table for historical min temperature
+drop table cec.canesm2_tasmin_historical_cvpm;
+create table cec.canesm2_tasmin_historical_cvpm as
+select
+c.cvpm,
+p.year, 
+p.month, 
+avg(p.tmin) as avgtmin
+from cec.canesm2_tasmin_historical p, cec.cvpm_area c
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
+and p.tmin < 1e+020
+group by 1, 2, 3
+order by 1, 2, 3;
+
+---1.3 Aggregated table for historical max temperature
+drop table cec.canesm2_tasmax_historical_cvpm;
+create table cec.canesm2_tasmax_historical_cvpm as
+select
+c.cvpm,
+p.year, 
+p.month, 
+avg(p.tmax) as avgtmax
+from cec.canesm2_tasmax_historical p, cec.cvpm_area c
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
+and p.tmax < 1e+020
+group by 1, 2, 3
+order by 1, 2, 3;
+
+---1.4 Aggregated table for rcp85 precipitation
+drop table cec.canesm2_pr_rcp85_cvpm;
+create table cec.canesm2_pr_rcp85_cvpm as
+select
+c.cvpm,
+p.year, 
+p.month, 
+avg(p.pr) as avgpr
+from cec.canesm2_pr_rcp85 p, cec.cvpm_area c
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
+and p.pr < 1e+020
+--and c.cvpm = '1' and p.year = '1950' and month = '12'
+group by 1, 2, 3
+order by 1, 2, 3;
 
 
-SELECT ST_Intersects('POINT(0 0)'::geometry, 'LINESTRING ( 2 0, 0 2 )'::geometry);
- st_intersects
----------------
- f
+---1.5 Aggregated table for rcp85 min temperature
+drop table cec.canesm2_tasmin_rcp85_cvpm;
+create table cec.canesm2_tasmin_rcp85_cvpm as
+select
+c.cvpm,
+p.year, 
+p.month, 
+avg(p.tmin) as avgtmin
+from cec.canesm2_tasmin_rcp85 p, cec.cvpm_area c
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
+and p.tmin < 1e+020
+group by 1, 2, 3
+order by 1, 2, 3;
 
-SELECT ST_Intersects(
-		ST_GeographyFromText('SRID=4326;LINESTRING(-43.23456 72.4567,-43.23456 72.4568)'),
-		ST_GeographyFromText('SRID=4326;POINT(-43.23456 72.4567772)')
-		);
+---1.6 Aggregated table for rcp85 max temperature
+drop table cec.canesm2_tasmax_v_cvpm;
+create table cec.canesm2_tasmax_rcp85_cvpm as
+select
+c.cvpm,
+p.year, 
+p.month, 
+avg(p.tmax) as avgtmax
+from cec.canesm2_tasmax_rcp85 p, cec.cvpm_area c
+where ST_Intersects(p.geom::geometry,c.geom::geometry) 
+and p.tmax < 1e+020
+group by 1, 2, 3
+order by 1, 2, 3;
 
- st_intersects
----------------
-t
+---
+select
+pr.*,
+tmin.avgtmin,
+tmax.avgtmax,
+((pr.year||'-'||CAST(pr.month AS VARCHAR(2))||'-16')::date) as time
+from cec.canesm2_pr_historical_cvpm pr
+join cec.canesm2_tasmin_historical_cvpm tmin using (cvpm, year, month)
+join cec.canesm2_tasmax_historical_cvpm tmax using (cvpm, year, month)
+order by cvpm, year, month;
+
+select
+pr.*,
+tmin.avgtmin,
+tmax.avgtmax,
+((pr.year||'-'||CAST(pr.month AS VARCHAR(2))||'-16')::date) as time
+from cec.canesm2_pr_rcp85_cvpm pr
+join cec.canesm2_tasmin_rcp85_cvpm tmin using (cvpm, year, month)
+join cec.canesm2_tasmax_rcp85_cvpm tmax using (cvpm, year, month)
+order by cvpm, year, month;
+
+
+
+
+
+
