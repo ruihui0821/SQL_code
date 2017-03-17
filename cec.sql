@@ -161,8 +161,8 @@ select
 c.id,
 p.year, 
 p.month, 
-avg(p.pr) as avgpr
-from cec.canesm2_pr_historical p, cec.groundwaterbasins_cv c
+avg(p.tmin) as avgtmin
+from cec.canesm2_tasmin_historical p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmin < 1e+020
 group by 1, 2, 3
@@ -177,8 +177,8 @@ select
 c.id,
 p.year, 
 p.month, 
-avg(p.pr) as avgpr
-from cec.canesm2_pr_historical p, cec.groundwaterbasins_cv c
+avg(p.tmax) as avgtmax
+from cec.canesm2_tasmax_historical p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmax < 1e+020
 group by 1, 2, 3
@@ -209,8 +209,8 @@ select
 c.id,
 p.year, 
 p.month, 
-avg(p.pr) as avgpr
-from cec.canesm2_pr_historical p, cec.groundwaterbasins_cv c
+avg(p.tmin) as avgtmin
+from cec.canesm2_tasmin_historical p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmin < 1e+020
 group by 1, 2, 3
@@ -225,8 +225,8 @@ select
 c.id,
 p.year, 
 p.month, 
-avg(p.pr) as avgpr
-from cec.canesm2_pr_historical p, cec.groundwaterbasins_cv c
+avg(p.tmax) as avgtmax
+from cec.canesm2_tasmax_historical p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmax < 1e+020
 group by 1, 2, 3
