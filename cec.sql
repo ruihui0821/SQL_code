@@ -154,7 +154,7 @@ order by 1, 2, 3;
 
 alter table cecagg.canesm2_pr_historical_gwcv add primary key (id, year, month);
 
----1.2 Aggregated table for historical min temperature
+---2.2 Aggregated table for historical min temperature
 drop table cecagg.canesm2_tasmin_historical_gwcv;
 create table cecagg.canesm2_tasmin_historical_gwcv as
 select
@@ -170,7 +170,7 @@ order by 1, 2, 3;
 
 alter table cecagg.canesm2_tasmin_historical_gwcv add primary key (id, year, month);
 
----1.3 Aggregated table for historical max temperature
+---2.3 Aggregated table for historical max temperature
 drop table cecagg.canesm2_tasmax_historical_gwcv;
 create table cecagg.canesm2_tasmax_historical_gwcv as
 select
@@ -186,7 +186,7 @@ order by 1, 2, 3;
 
 alter table cecagg.canesm2_tasmax_historical_gwcv add primary key (id, year, month);
 
----1.4 Aggregated table for rcp85 precipitation
+---2.4 Aggregated table for rcp85 precipitation
 drop table cecagg.canesm2_pr_rcp85_gwcv;
 create table cecagg.canesm2_pr_rcp85_gwcv as
 select
@@ -194,7 +194,7 @@ c.id,
 p.year, 
 p.month, 
 avg(p.pr) as avgpr
-from cec.canesm2_pr_historical p, cec.groundwaterbasins_cv c
+from cec.canesm2_pr_rcp85 p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.pr < 1e+020
 group by 1, 2, 3
@@ -202,7 +202,7 @@ order by 1, 2, 3;
 
 alter table cecagg.canesm2_pr_rcp85_gwcv add primary key (id, year, month);
 
----1.5 Aggregated table for rcp85 min temperature
+---2.5 Aggregated table for rcp85 min temperature
 drop table cecagg.canesm2_tasmin_rcp85_gwcv;
 create table cecagg.canesm2_tasmin_rcp85_gwcv as
 select
@@ -210,7 +210,7 @@ c.id,
 p.year, 
 p.month, 
 avg(p.tmin) as avgtmin
-from cec.canesm2_tasmin_historical p, cec.groundwaterbasins_cv c
+from cec.canesm2_tasmin_rcp85 p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmin < 1e+020
 group by 1, 2, 3
@@ -218,7 +218,7 @@ order by 1, 2, 3;
 
 alter table cecagg.canesm2_tasmin_rcp85_gwcv add primary key (id, year, month);
 
----1.6 Aggregated table for rcp85 max temperature
+---2.6 Aggregated table for rcp85 max temperature
 drop table cecagg.canesm2_tasmax_rcp85_gwcv;
 create table cecagg.canesm2_tasmax_rcp85_gwcv as
 select
@@ -226,7 +226,7 @@ c.id,
 p.year, 
 p.month, 
 avg(p.tmax) as avgtmax
-from cec.canesm2_tasmax_historical p, cec.groundwaterbasins_cv c
+from cec.canesm2_tasmax_rcp85 p, cec.groundwaterbasins_cv c
 where ST_Intersects(p.geom::geometry,c.geom::geometry) 
 and p.tmax < 1e+020
 group by 1, 2, 3
