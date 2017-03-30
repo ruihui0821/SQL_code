@@ -176,3 +176,35 @@ group by 1
 order by 1;
 
 
+alter table ca.ca_waterdepth_damage_value_2015 add column cid character varying(6);
+update ca.ca_waterdepth_damage_value_2015 cw 
+set cid = (select c.re_community from ca.capaidclaims c where c.gid = cw.gid) 
+where exists (select c.re_community from ca.capaidclaims c where c.gid = cw.gid);
+
+alter table ca.ca_waterdepth_damage_value_2015 add column jurisdiction_id integer;
+update ca.ca_waterdepth_damage_value_2015 cw 
+set jurisdiction_id = (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid) 
+where exists (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid);
+
+drop table ca.ca_waterdepth_damage_community;
+create table ca.ca_waterdepth_damage_community as
+select 
+c.cid,
+j.boundary,
+j.j_pop10,
+ji.income,
+c.waterdepth,
+count(*),
+sum(c.pay) as tpay,
+sum(c.dmg) as tdmg,
+sum(c.value) as tvalue
+from ca.ca_waterdepth_damage_value_2015 c
+join fima.jurisdictions j using (jurisdiction_id)
+join fima.j_income ji using (jurisdiction_id)
+group by 1, 2, 3, 4, 5
+order by 1, 2, 3, 4, 5;
+
+alter table ca.ca_waterdepth_damage_community add primary key(cid, waterdepth);
+
+
+
