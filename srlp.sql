@@ -236,4 +236,62 @@ join a on (a.cid = s.cid)
 join b on (b.cid = s.cid)
 join q on (q.cid = s.cid);
 
+drop table public.srlp_date;
+create table public.srlp_date as
+select 
+statename, commname, commno, proplocatr, insured, city, state, zipcode, 
+notspecsw, nobldgsw, floodprsw, gt100sw, unablidsw, box1sw, box2sw, box3sw, box4sw, histbldsw,
+dtloss01, pay_bldg01, pay_cont01,
+filler01, pval_ind, ident_dt, occupancy, post_firm, zone, prop_value, building, contents, proplosses, loss_5000, paid, average, tgt_ind, cid
+from public.srlp
+where dtloss01 is not null or pay_bldg01>0 or pay_cont01>0;
+
+INSERT INTO public.srlp_date 
+SELECT 
+statename, commname, commno, proplocatr, insured, city, state, zipcode, 
+notspecsw, nobldgsw, floodprsw, gt100sw, unablidsw, box1sw, box2sw, box3sw, box4sw, histbldsw,
+dtloss32, pay_bldg32, pay_cont32,
+filler01, pval_ind, ident_dt, occupancy, post_firm, zone, prop_value, building, contents, proplosses, loss_5000, paid, average, tgt_ind, cid
+FROM public.srlp
+WHERE dtloss32 is not null or pay_bldg32>0 or pay_cont32>0;
+
+alter table public.srlp_date rename column dtloss01 to dtloss;
+alter table public.srlp_date rename column pay_bldg01 to pay_bldg;
+alter table public.srlp_date rename column pay_cont01 to pay_cont;
+
+alter table public.srlp_date add column year character varying (4);
+alter table public.srlp_date add column month character varying (2);
+alter table public.srlp_date add column day character varying (2);
+
+update public.srlp_date set year = substr(dtloss, 1, 4) where substr(dtloss, 1, 1) in ('1', '2');
+update public.srlp_date set year = 2004 where year is null;
+
+update public.srlp_date set month = substr(dtloss, 5, 2) where substr(dtloss, 5, 2) !='';
+update public.srlp_date set month = '12'  where month = '1' or month is null;
+
+update public.srlp_date set day = substr(dtloss, 7, 2) where substr(dtloss, 7, 2) !='';
+update public.srlp_date set day = '10'  where day = '1' or day is null;
+update public.srlp_date set day = '20'  where day = '2' ;
+update public.srlp_date set day = '30'  where day = '3';
+
+alter table public.srlp_date add column dt_of_loss date;
+update public.srlp_date
+set dt_of_loss = ((year||'-'||month||'-'||day)::date);
+
+select
+statename,
+cid,
+proplocatr,
+proplosses,
+paid,
+prop_value,
+max(dt_of_loss) as newest_loss,
+min(dt_of_loss) oldest_loss,
+max(dt_of_loss) - min(dt_of_loss) as loss_history,
+(max(dt_of_loss) - min(dt_of_loss))/proplosses as avg_loss_interval
+from public.srlp_date
+where occupancy = '1'
+group by 1, 2, 3, 4, 5, 6
+order by 1, 2, 3;
+
 
