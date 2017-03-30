@@ -294,4 +294,39 @@ where occupancy = '1'
 group by 1, 2, 3, 4, 5, 6
 order by 1, 2, 3;
 
+with s as (
+  select sd.commname, sd.proplocatr, year, (sd.pay_bldg + sd.pay_cont)* i.rate as pay 
+  from public.srlp_date sd join public.inflation i on (i.from_year = sd.year) 
+  where i.to_year = 2015 and sd.cid in (select n.cid from fima.nation n where county = 'SONOMA COUNTY') ) 
+select commname, count(distinct proplocatr), count(*) as total_proplosses, sum(pay) 
+from s group by 1 order by 1;
+      commname       | count | total_proplosses |       sum       
+---------------------+-------+------------------+-----------------
+ HEALDSBURG, CITY OF |     1 |                6 |    141197.85052
+ PETALUMA, CITY OF   |     3 |               14 |  1023349.001941
+ SANTA ROSA, CITY OF |     1 |                7 |   157238.699729
+ SEBASTOPOL, CITY OF |     2 |                4 |    58641.557758
+ SONOMA COUNTY *     |   180 |              977 | 44585184.193181
 
+with s as (
+  select sd.commname, sd.proplocatr, year, (sd.pay_bldg + sd.pay_cont)* i.rate as pay 
+  from public.srlp_date sd join public.inflation i on (i.from_year = sd.year) 
+  where i.to_year = 2015 and sd.cid in (select n.cid from fima.nation n where county = 'SONOMA COUNTY') 
+  and dt_of_loss >= '1994-01-01' and dt_of_loss <= '2014-12-31') 
+select commname, count(distinct proplocatr), count(*) as total_proplosses, sum(pay) from s group by 1 order by 1;
+      commname       | count | total_proplosses |       sum       
+---------------------+-------+------------------+-----------------
+ PETALUMA, CITY OF   |     3 |                8 |   428698.918357
+ SANTA ROSA, CITY OF |     1 |                3 |    70745.837632
+ SEBASTOPOL, CITY OF |     2 |                3 |    37016.557758
+ SONOMA COUNTY *     |   175 |              562 | 28313174.114357
+
+with s as (
+  select sd.commname, sd.proplocatr, year, (sd.pay_bldg + sd.pay_cont)* i.rate as pay 
+  from public.srlp_date sd join public.inflation i on (i.from_year = sd.year) 
+  where i.to_year = 2015 and sd.cid in (select n.cid from fima.nation n where county = 'SONOMA COUNTY') 
+  and dt_of_loss >= '1994-01-01' and dt_of_loss <= '2014-12-31') 
+select count(distinct proplocatr), count(*) as total_proplosses, sum(pay) from s;
+ count | total_proplosses |       sum       
+-------+------------------+-----------------
+   181 |              576 | 28849635.428104
