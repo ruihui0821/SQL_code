@@ -186,12 +186,13 @@ update ca.ca_waterdepth_damage_value_2015 cw
 set jurisdiction_id = (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid) 
 where exists (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid);
 
+--- creating the waterdepth damage table for each community for each waterdepth in California
 drop table ca.ca_waterdepth_damage_community;
 create table ca.ca_waterdepth_damage_community as
 select 
-c.cid,
+j.j_cid as cid,
 j.boundary,
-j.j_pop10,
+j.j_pop10 as population,
 ji.income,
 c.waterdepth,
 count(*),
@@ -199,12 +200,33 @@ sum(c.pay) as tpay,
 sum(c.dmg) as tdmg,
 sum(c.value) as tvalue
 from ca.ca_waterdepth_damage_value_2015 c
-join fima.jurisdictions j using (jurisdiction_id)
+full join fima.jurisdictions j using (jurisdiction_id)
 join fima.j_income ji using (jurisdiction_id)
+where j.j_statefp10 = '06'
 group by 1, 2, 3, 4, 5
 order by 1, 2, 3, 4, 5;
 
+update ca.ca_waterdepth_damage_community
+set waterdepth = 999 where waterdepth is null;
+
 alter table ca.ca_waterdepth_damage_community add primary key(cid, waterdepth);
 
+--- creating the waterdepth damage table for each community in California
+--- for waterdepth -12 to 0, 0, 0 to 12, 13 to 24, 25 to 36, 37 to 72, 73 to 108, 109 to 144, and all
+drop table ca.ca_waterdepth_damage_community_n12;
+create table ca.ca_waterdepth_damage_community_n12 as
+select 
+cid,
+boundary,
+population,
+income,
+sum(count) as count,
+sum(tpay) as tpay,
+sum(tdmg) as tdmg,
+sum(tvalue) as tvalue
+from ca.ca_waterdepth_damage_community
+where waterdepth >= -12 and waterdepth < 0
+group by 1, 2, 3, 4
+order by 1, 2, 3, 4;
 
 
