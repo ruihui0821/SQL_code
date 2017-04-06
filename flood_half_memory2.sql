@@ -102,6 +102,8 @@ i.to_year as dollars_in
 from s join public.inflation i on (i.from_year=s.year) 
 where i.to_year=2015;
 
+update summary.fmhl_claims_summary_2015 set t_prop_val = 0.1 where t_prop_val=0;
+
 ----1.2 Claim summary for the flood disaster
 drop table summary.fmhl_claims_summary_disaster_2015;
 create table summary.fmhl_claims_summary_disaster_2015 as
@@ -149,6 +151,8 @@ from s join public.inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
 alter table summary.fmhl_claims_summary_disaster_2015 add primary key (state, county);
+
+update summary.fmhl_claims_summary_disaster_2015 set t_prop_val = 0.1 where t_prop_val=0;
 
 select count(*) from public.paidclaims 
 where re_state = 'CA' and county = 'Imperial' 
@@ -202,9 +206,9 @@ order by 1, 2;
 
 alter table summary.fmhl_claims_disaster_2015 add primary key (state, county);
 
-----3.1 Claim summary for the flood disaster for flood zones, zone A.
-drop table summary.fmhl_claims_disaster_fzonea_2015;
-create table summary.fmhl_claims_disaster_fzonea_2015 as
+----3.1 Claim summary for flood zones, zone A.
+drop table summary.fmhl_claims_fzonea_2015;
+create table summary.fmhl_claims_fzonea_2015 as
 select
 state,
 county,
@@ -224,9 +228,105 @@ where fzone = 'A'
 group by 1, 2, 3, 4
 order by 1, 2;
 
+alter table summary.fmhl_claims_fzonea_2015 add primary key (state, county);
+
+----3.2 Claim summary for flood zones, zone B.
+drop table summary.fmhl_claims_fzoneb_2015;
+create table summary.fmhl_claims_fzoneb_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_2015
+where fzone = 'B'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_fzoneb_2015 add primary key (state, county);
+
+----3.3 Claim summary for flood zones, zone C.
+drop table summary.fmhl_claims_fzonec_2015;
+create table summary.fmhl_claims_fzonec_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_2015
+where fzone in ('C','D')
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_fzonec_2015 add primary key (state, county);
+
+----3.4 Claim summary for flood zones, zone V.
+drop table summary.fmhl_claims_fzonev_2015;
+create table summary.fmhl_claims_fzonev_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_2015
+where fzone ='V'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_fzonev_2015 add primary key (state, county);
+
+----3.5 Claim summary for the flood disaster for flood zones, zone A.
+drop table summary.fmhl_claims_disaster_fzonea_2015;
+create table summary.fmhl_claims_disaster_fzonea_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_disaster_2015
+where fzone = 'A'
+group by 1, 2, 3, 4
+order by 1, 2;
+
 alter table summary.fmhl_claims_disaster_fzonea_2015 add primary key (state, county);
 
-----3.2 Claim summary for the flood disaster for flood zones, zone B.
+----3.6 Claim summary for the flood disaster for flood zones, zone B.
 drop table summary.fmhl_claims_disaster_fzoneb_2015;
 create table summary.fmhl_claims_disaster_fzoneb_2015 as
 select
@@ -243,14 +343,14 @@ sum(t_dmg_bldg) as t_dmg_bldg,
 sum(t_dmg_cont) as t_dmg_cont,
 sum(pay_bldg) as pay_bldg,
 sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone = 'B' and t_prop_val>0
+from summary.fmhl_claims_summary_disaster_2015
+where fzone = 'B'
 group by 1, 2, 3, 4
 order by 1, 2;
 
 alter table summary.fmhl_claims_disaster_fzoneb_2015 add primary key (state, county);
 
-----3.2 Claim summary for the flood disaster for flood zones, zone C.
+----3.7 Claim summary for the flood disaster for flood zones, zone C.
 drop table summary.fmhl_claims_disaster_fzonec_2015;
 create table summary.fmhl_claims_disaster_fzonec_2015 as
 select
@@ -267,9 +367,130 @@ sum(t_dmg_bldg) as t_dmg_bldg,
 sum(t_dmg_cont) as t_dmg_cont,
 sum(pay_bldg) as pay_bldg,
 sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone = 'C' and t_prop_val>0
+from summary.fmhl_claims_summary_disaster_2015
+where fzone in ('C','D')
 group by 1, 2, 3, 4
 order by 1, 2;
 
 alter table summary.fmhl_claims_disaster_fzonec_2015 add primary key (state, county);
+
+----3.8 Claim summary for the flood disaster for flood zones, zone V.
+drop table summary.fmhl_claims_disaster_fzonev_2015;
+create table summary.fmhl_claims_disaster_fzonev_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_disaster_2015
+where fzone ='V'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_disaster_fzonev_2015 add primary key (state, county);
+
+----4.1 Claim summary for post-firm structure.
+drop table summary.fmhl_claims_postfirm_2015;
+create table summary.fmhl_claims_postfirm_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_2015
+where post_firm = 'Y'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_postfirm_2015 add primary key (state, county);
+
+----4.2 Claim summary for pre-firm structure.
+drop table summary.fmhl_claims_prefirm_2015;
+create table summary.fmhl_claims_prefirm_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_2015
+where post_firm = 'N'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_prefirm_2015 add primary key (state, county);
+
+----4.3 Claim summary for flood disaster for post-firm structure.
+drop table summary.fmhl_claims_disaster_postfirm_2015;
+create table summary.fmhl_claims_disaster_postfirm_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_disaster_2015
+where post_firm = 'Y'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_disaster_postfirm_2015 add primary key (state, county);
+
+----4.4 Claim summary for flood disaster pre-firm structure.
+drop table summary.fmhl_claims_disaster_prefirm_2015;
+create table summary.fmhl_claims_disaster_prefirm_2015 as
+select
+state,
+county,
+days,
+households,
+sum(count) as count,
+sum(pay) as pay,
+sum(t_dmg) as t_dmg,
+sum(t_prop_val) as t_prop_val,
+sum(t_dmg)/sum(t_prop_val) as damage_ratio,
+sum(t_dmg_bldg) as t_dmg_bldg,
+sum(t_dmg_cont) as t_dmg_cont,
+sum(pay_bldg) as pay_bldg,
+sum(pay_cont) as pay_cont
+from summary.fmhl_claims_summary_disaster_2015
+where post_firm = 'N'
+group by 1, 2, 3, 4
+order by 1, 2;
+
+alter table summary.fmhl_claims_disaster_prefirm_2015 add primary key (state, county);
+
