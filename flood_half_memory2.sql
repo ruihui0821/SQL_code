@@ -63,10 +63,8 @@ drop table summary.fmhl_claims_summary_2015;
 create table summary.fmhl_claims_summary_2015 as
 with s as (
   select
-  f.state,
-  f.county,
-  f.days,
-  f.households,
+  p.re_state as state,
+  p.county,
   p.fzone,
   p.post_firm,
   extract(year from dt_of_loss) as year,
@@ -76,17 +74,14 @@ with s as (
   sum(p.pay_bldg) as pay_bldg,
   sum(p.pay_cont) as pay_cont,
   sum(t_prop_val) as t_prop_val
-  from summary.fmhl f 
-  left join public.paidclaims p on (f.state = p.re_state) AND (f.county = p.county)
+  from public.paidclaims p
   where p.re_state in ('CA', 'LA', 'NY', 'IL')
-  group by 1, 2, 3, 4, 5, 6, 7
-  order by 1, 2, 3, 4, 5, 6, 7
+  group by 1, 2, 3, 4, 5
+  order by 1, 2, 3, 4, 5
 )
 select
 s.state,
 s.county,
-s.days,
-s.households,
 s.fzone,
 s.post_firm,
 s.year,
@@ -109,10 +104,8 @@ drop table summary.fmhl_claims_summary_disaster_2015;
 create table summary.fmhl_claims_summary_disaster_2015 as
 with s as (
   select
-  f.state,
-  f.county,
-  f.days,
-  f.households,
+  p.re_state as state,
+  p.county,
   p.fzone,
   p.post_firm,
   extract(year from dt_of_loss) as year,
@@ -127,14 +120,12 @@ with s as (
   where p.re_state in ('CA', 'LA', 'NY', 'IL')
   and p.dt_of_loss >= disaster_date - interval '3 month'
   and p.dt_of_loss <= disaster_date + interval '9 month'
-  group by 1, 2, 3, 4, 5, 6, 7
-  order by 1, 2, 3, 4, 5, 6, 7
+  group by 1, 2, 3, 4, 5
+  order by 1, 2, 3, 4, 5
 )
 select
 s.state,
 s.county,
-s.days,
-s.households,
 s.fzone,
 s.post_firm,
 s.year,
@@ -150,8 +141,6 @@ i.to_year as dollars_in
 from s join public.inflation i on (i.from_year=s.year) 
 where i.to_year=2015;
 
-alter table summary.fmhl_claims_summary_disaster_2015 add primary key (state, county);
-
 update summary.fmhl_claims_summary_disaster_2015 set t_prop_val = 0.1 where t_prop_val=0;
 
 select count(*) from public.paidclaims 
@@ -164,20 +153,21 @@ and dt_of_loss <= ('1997-01-04'::date + interval '9 month');
 drop table summary.fmhl_claims_2015;
 create table summary.fmhl_claims_2015 as
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join summary.fmhl_claims_summary_2015 c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -187,20 +177,21 @@ alter table summary.fmhl_claims_2015 add primary key (state, county);
 drop table summary.fmhl_claims_disaster_2015;
 create table summary.fmhl_claims_disaster_2015 as
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join summary.fmhl_claims_summary_disaster_2015 c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -209,22 +200,26 @@ alter table summary.fmhl_claims_disaster_2015 add primary key (state, county);
 ----3.1 Claim summary for flood zones, zone A.
 drop table summary.fmhl_claims_fzonea_2015;
 create table summary.fmhl_claims_fzonea_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where fzone = 'A')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone = 'A'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -233,22 +228,26 @@ alter table summary.fmhl_claims_fzonea_2015 add primary key (state, county);
 ----3.2 Claim summary for flood zones, zone B.
 drop table summary.fmhl_claims_fzoneb_2015;
 create table summary.fmhl_claims_fzoneb_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where fzone = 'B')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone = 'B'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -257,22 +256,26 @@ alter table summary.fmhl_claims_fzoneb_2015 add primary key (state, county);
 ----3.3 Claim summary for flood zones, zone C.
 drop table summary.fmhl_claims_fzonec_2015;
 create table summary.fmhl_claims_fzonec_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where fzone in ('C','D'))
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone in ('C','D')
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -281,22 +284,26 @@ alter table summary.fmhl_claims_fzonec_2015 add primary key (state, county);
 ----3.4 Claim summary for flood zones, zone V.
 drop table summary.fmhl_claims_fzonev_2015;
 create table summary.fmhl_claims_fzonev_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where fzone = 'V')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where fzone ='V'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -305,22 +312,26 @@ alter table summary.fmhl_claims_fzonev_2015 add primary key (state, county);
 ----3.5 Claim summary for the flood disaster for flood zones, zone A.
 drop table summary.fmhl_claims_disaster_fzonea_2015;
 create table summary.fmhl_claims_disaster_fzonea_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where fzone = 'A')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where fzone = 'A'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -329,22 +340,26 @@ alter table summary.fmhl_claims_disaster_fzonea_2015 add primary key (state, cou
 ----3.6 Claim summary for the flood disaster for flood zones, zone B.
 drop table summary.fmhl_claims_disaster_fzoneb_2015;
 create table summary.fmhl_claims_disaster_fzoneb_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where fzone = 'B')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where fzone = 'B'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -353,22 +368,26 @@ alter table summary.fmhl_claims_disaster_fzoneb_2015 add primary key (state, cou
 ----3.7 Claim summary for the flood disaster for flood zones, zone C.
 drop table summary.fmhl_claims_disaster_fzonec_2015;
 create table summary.fmhl_claims_disaster_fzonec_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where fzone in ('C','D'))
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where fzone in ('C','D')
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -377,22 +396,26 @@ alter table summary.fmhl_claims_disaster_fzonec_2015 add primary key (state, cou
 ----3.8 Claim summary for the flood disaster for flood zones, zone V.
 drop table summary.fmhl_claims_disaster_fzonev_2015;
 create table summary.fmhl_claims_disaster_fzonev_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where fzone = 'V')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where fzone ='V'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -401,22 +424,26 @@ alter table summary.fmhl_claims_disaster_fzonev_2015 add primary key (state, cou
 ----4.1 Claim summary for post-firm structure.
 drop table summary.fmhl_claims_postfirm_2015;
 create table summary.fmhl_claims_postfirm_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where post_firm = 'Y')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where post_firm = 'Y'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -425,22 +452,26 @@ alter table summary.fmhl_claims_postfirm_2015 add primary key (state, county);
 ----4.2 Claim summary for pre-firm structure.
 drop table summary.fmhl_claims_prefirm_2015;
 create table summary.fmhl_claims_prefirm_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_2015
+  where post_firm = 'N')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_2015
-where post_firm = 'N'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f 
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -449,22 +480,26 @@ alter table summary.fmhl_claims_prefirm_2015 add primary key (state, county);
 ----4.3 Claim summary for flood disaster for post-firm structure.
 drop table summary.fmhl_claims_disaster_postfirm_2015;
 create table summary.fmhl_claims_disaster_postfirm_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where post_firm = 'Y')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where post_firm = 'Y'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
@@ -473,22 +508,26 @@ alter table summary.fmhl_claims_disaster_postfirm_2015 add primary key (state, c
 ----4.4 Claim summary for flood disaster pre-firm structure.
 drop table summary.fmhl_claims_disaster_prefirm_2015;
 create table summary.fmhl_claims_disaster_prefirm_2015 as
+with c as (
+  select *
+  from summary.fmhl_claims_summary_disaster_2015
+  where post_firm = 'N')
 select
-state,
-county,
-days,
-households,
-sum(count) as count,
-sum(pay) as pay,
-sum(t_dmg) as t_dmg,
-sum(t_prop_val) as t_prop_val,
-sum(t_dmg)/sum(t_prop_val) as damage_ratio,
-sum(t_dmg_bldg) as t_dmg_bldg,
-sum(t_dmg_cont) as t_dmg_cont,
-sum(pay_bldg) as pay_bldg,
-sum(pay_cont) as pay_cont
-from summary.fmhl_claims_summary_disaster_2015
-where post_firm = 'N'
+f.state,
+f.county,
+f.days,
+f.households,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from summary.fmhl f
+left outer join c on (f.state = c.state) AND (f.county = c.county)
 group by 1, 2, 3, 4
 order by 1, 2;
 
