@@ -114,9 +114,65 @@ order by 1, 2;
 alter table summary.fmhl_urban add primary key (state, county);
 
 
-
-
-
+---------------------------------------------------------------------------------------------------------------------------------------
+-- repeated counties
+CA	LAKE	488	6/5/06
+CA	RIVERSIDE	867	9/13/05
+CA	SAN BERNARDINO	662	9/13/05
+LA	IBERVILLE	273	5/6/11
+with c as (
+  with s as (
+    select
+    p.re_state as state,
+    p.county,
+    p.fzone,
+    p.post_firm,
+    extract(year from dt_of_loss) as year,
+    count(p.*),
+    sum(p.t_dmg_bldg) as t_dmg_bldg,
+    sum(p.t_dmg_cont) as t_dmg_cont,
+    sum(p.pay_bldg) as pay_bldg,
+    sum(p.pay_cont) as pay_cont,
+    sum(p.t_prop_val) as t_prop_val
+    from public.paidclaims p
+    where p.re_state in ('LA') and p.county = 'Iberville'
+    and p.dt_of_loss >= ('2011-05-06'::date - interval '3 month')
+    and p.dt_of_loss <= ('2011-05-06'::date + interval '9 month')
+    group by 1, 2, 3, 4, 5
+    order by 1, 2, 3, 4, 5)
+  select
+  s.state,
+  s.county,
+  s.fzone,
+  s.post_firm,
+  s.year,
+  s.count,
+  (s.pay_bldg + s.pay_cont)*rate as pay,
+  (s.t_dmg_bldg + s.t_dmg_cont)*rate as t_dmg,
+  s.t_prop_val*rate as t_prop_val,
+  s.t_dmg_bldg*rate as t_dmg_bldg,
+  s.t_dmg_cont*rate as t_dmg_cont,
+  s.pay_bldg*rate as pay_bldg,
+  s.pay_cont*rate as pay_cont,
+  i.to_year as dollars_in
+  from s join public.inflation i on (i.from_year=s.year) 
+  where i.to_year=2015)
+select
+c.state,
+c.county,
+sum(c.count) as count,
+sum(c.pay) as pay,
+sum(c.t_dmg) as t_dmg,
+sum(c.t_prop_val) as t_prop_val,
+sum(c.t_dmg)/sum(c.t_prop_val) as damage_ratio,
+sum(c.t_dmg_bldg) as t_dmg_bldg,
+sum(c.t_dmg_cont) as t_dmg_cont,
+sum(c.pay_bldg) as pay_bldg,
+sum(c.pay_cont) as pay_cont
+from c
+--where fzone in ('A')
+--where post_firm = 'N'
+group by 1, 2;
 
 
 
