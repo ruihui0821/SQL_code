@@ -1,93 +1,64 @@
--- By state for all years
-drop table us.firm_claim_state;
-create table us.firm_claim_state as
-with pre as(
+-- Policy and Claim summary by state for overlapping years 1994-2014
+drop table us.firm_claim_policy_state;
+create table us.firm_claim_policy_state as
+with cpre as(
   select
   state,
   sum(count) as count,
   sum(pay) as pay
   from summary.prefirm_claim_state_jurisdiction_2015
+  where year >= 1994 and year <= 2014
   group by 1
   order by 1),
-post as(
+cpost as(
   select
   state,
   sum(count) as count,
   sum(pay) as pay
   from summary.postfirm_claim_state_jurisdiction_2015
+  where year >= 1994 and year <= 2014
   group by 1
-  order by 1)
-select
-COALESCE(pre.state, post.state) AS state,
-pre.count as precount,
-pre.pay as prepay,
-post.count as postcount,
-post.pay as postpay,
-post.count/(pre.count + post.count) as compliance
-from pre
-full join post using (state)
-order by 1;
-
--- By state for all years
-drop table us.firm_policy_state;
-create table us.firm_policy_state as
-with pre as(
+  order by 1),
+ppre as(
   select
   state,
   sum(count) as count,
   sum(premium) as premium
   from summary.prefirm_policy_state_jurisdiction_2015
+  where year >= 1994 and year <= 2014
   group by 1
   order by 1),
-post as(
+ppost as(
   select
   state,
   sum(count) as count,
   sum(premium) as premium
   from summary.postfirm_policy_state_jurisdiction_2015
+  where year >= 1994 and year <= 2014
   group by 1
   order by 1)
 select
-COALESCE(pre.state, post.state) AS state,
-pre.count as precount,
-pre.premium as prepremium,
-post.count as postcount,
-post.premium as postpremium,
-post.count/(pre.count + post.count) as compliance
-from pre
-full join post using (state)
+COALESCE(cpre.state, cpost.state, ppre.state, ppost.state) AS state,
+cpre.count as cprecount,
+cpre.pay as prepay,
+cpost.count as cpostcount,
+cpost.pay as postpay,
+ppre.count as pprecount,
+ppre.premium as prepremium,
+ppost.count as ppostcount,
+ppost.premium as postpremium
+from cpre
+full join cpost using (state)
+full join ppre using (state)
+full join ppost using (state)
 order by 1;
 
--- By year for all states
-with pre as(
-  select
-  year,
-  sum(count) as count,
-  sum(premium) as premium
-  from summary.prefirm_policy_state_jurisdiction_2015
-  group by 1
-  order by 1),
-post as(
-  select
-  year,
-  sum(count) as count,
-  sum(premium) as premium
-  from summary.postfirm_policy_state_jurisdiction_2015
-  group by 1
-  order by 1)
-select
-COALESCE(pre.year, post.year) AS year,
-pre.count as precount,
-pre.premium as prepremium,
-post.count as postcount,
-post.premium as postpremium,
-post.count/(pre.count + post.count) as compliance
-from pre
-full join post using (year)
-order by 1;
+alter table us.firm_claim_policy_state add primary key (state);
 
--- By year for all states
-with pre as(
+-- Policy and Claim summary by year for all states
+drop table us.firm_claim_policy_year;
+create table us.firm_claim_policy_year as
+with cpre as(
   select
   year,
   sum(count) as count,
@@ -95,21 +66,45 @@ with pre as(
   from summary.prefirm_claim_state_jurisdiction_2015
   group by 1
   order by 1),
-post as(
+cpost as(
   select
   year,
   sum(count) as count,
   sum(pay) as pay
   from summary.postfirm_claim_state_jurisdiction_2015
   group by 1
+  order by 1),
+ppre as(
+  select
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1),
+ppost as(
+  select
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1
   order by 1)
 select
-COALESCE(pre.year, post.year) AS year,
-pre.count as precount,
-pre.pay as prepay,
-post.count as postcount,
-post.pay as postpay,
-post.count/(pre.count + post.count) as compliance
-from pre
-full join post using (year)
+COALESCE(cpre.year, cpost.year, ppre.year, ppost.year) AS year,
+cpre.count as cprecount,
+cpre.pay as prepay,
+cpost.count as cpostcount,
+cpost.pay as postpay,
+ppre.count as pprecount,
+ppre.premium as prepremium,
+ppost.count as ppostcount,
+ppost.premium as postpremium
+from cpre
+full join cpost using (year)
+full join ppre using (year)
+full join ppost using (year)
 order by 1;
+
+alter table us.firm_claim_policy_year add primary key (year);
+
