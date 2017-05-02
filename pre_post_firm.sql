@@ -318,8 +318,101 @@ order by 1, 2;
 
 
 
---------------------------------------------------------------------------------------------------------------------------------------
--- PRE & POST POLICY SUMMARY FOR COMMUNITY in 2014
+------------------------------------------------------------------------------------------------------------------------------------------------
+-- PRE & POST CLAIM SUMMARY FOR STATE
+drop table us.pre_post_firm_policy_state;
+create table us.pre_post_firm_policy_state as
+with pre as(
+  select
+  year,
+  state,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1, 2
+  order by 1, 2),
+post as(
+  select
+  year,
+  state,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1, 2
+  order by 1, 2)
+select
+COALESCE(pre.year, post.year) AS year,
+COALESCE(pre.state, post.state) AS state,
+pre.count as precount,
+pre.premium as prepremium,
+post.count as postcount,
+post.premium as postpremium,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (year, state);
+
+alter table us.pre_post_firm_policy_state add primary key(year, state);
+
+-- By state for all years
+drop table us.firm_policy_state;
+create table us.firm_policy_state as
+with pre as(
+  select
+  state,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  state,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+COALESCE(pre.state, post.state) AS state,
+pre.count as precount,
+pre.premium as prepremium,
+post.count as postcount,
+post.premium as postpremium,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (state)
+order by 1;
+
+-- By year for all states
+with pre as(
+  select
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+COALESCE(pre.year, post.year) AS year,
+pre.count as precount,
+pre.premium as prepremium,
+post.count as postcount,
+post.premium as postpremium,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (year)
+order by 1;
+
+
+-- PRE & POST POLICY SUMMARY FOR COMMUNITY
 drop table us.pre_post_firm_policy_community;
 create table us.pre_post_firm_policy_community as
 with pre as(
@@ -329,7 +422,7 @@ with pre as(
   sum(count) as count,
   sum(premium) as premium
   from summary.prefirm_policy_state_jurisdiction_2015
-  where year = 2014
+  --where year = 2014
   group by 1, 2
   order by 1, 2),
 post as(
@@ -339,7 +432,7 @@ post as(
   sum(count) as count,
   sum(premium) as premium
   from summary.postfirm_policy_state_jurisdiction_2015
-  where year = 2014
+  --where year = 2014
   group by 1, 2
   order by 1, 2)
 select
@@ -359,3 +452,36 @@ left outer join fima.nation n on (pre.community = n.cid);
 
 alter table us.pre_post_firm_policy_community add primary key(year, community);
 
+-- By community for all years
+drop table us.firm_policy_community;
+create table us.firm_policy_community as
+with pre as(
+  select
+  community,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1),
+post as(
+  select
+  community,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1
+  order by 1)
+select
+n.state,
+COALESCE(pre.community, post.community) AS community,
+n.community_name,
+n.county,
+pre.count as precount,
+pre.premium as prepremium,
+post.count as postcount,
+post.premium as postpremium,
+post.count/(pre.count + post.count) as compliance
+from pre
+full join post using (community)
+left outer join fima.nation n on (pre.community = n.cid)
+order by 1, 2;
