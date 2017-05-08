@@ -1,6 +1,5 @@
+
 RANCHO SANTA MARGARITA, CITY OF |     59 |  18206000 |   20563
-
-
 SAN FRANCISCO, CITY AND COUNTY OF|    132 |  36638900 |   78098
 
 (need to update in the imported csv)
@@ -57,3 +56,13 @@ select j. j_pop10
 from fima.jurisdictions j
 where j.j_cid = '060245')
 where c.cid =  '060763';
+
+select 
+n.county,
+sum(policy) as policy,
+sum(insurance) as insurance,
+sum(premium) as premium
+from ca.ca_policy_20170228 c
+join fima.nation n using (cid)
+group by 1
+order by 1;
