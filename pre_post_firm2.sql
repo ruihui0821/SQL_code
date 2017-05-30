@@ -1,3 +1,64 @@
+-- Policy and Claim summary by state and by year
+drop table us.firm_claim_policy_state_year;
+create table us.firm_claim_policy_state_year as
+with cpre as(
+  select
+  state,
+  year,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.prefirm_claim_state_jurisdiction_2015
+  group by 1,2
+  order by 1,2),
+cpost as(
+  select
+  state,
+  year,
+  sum(count) as count,
+  sum(pay) as pay
+  from summary.postfirm_claim_state_jurisdiction_2015
+  group by 1,2
+  order by 1,2),
+ppre as(
+  select
+  state,
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.prefirm_policy_state_jurisdiction_2015
+  group by 1,2
+  order by 1,2),
+ppost as(
+  select
+  state,
+  year,
+  sum(count) as count,
+  sum(premium) as premium
+  from summary.postfirm_policy_state_jurisdiction_2015
+  group by 1,2
+  order by 1,2)
+select
+COALESCE(cpre.state, cpost.state, ppre.state, ppost.state) AS state,
+COALESCE(cpre.year, cpost.year, ppre.year, ppost.year) AS year,
+cpre.count as cprecount,
+cpre.pay as prepay,
+cpost.count as cpostcount,
+cpost.pay as postpay,
+ppre.count as pprecount,
+ppre.premium as prepremium,
+ppost.count as ppostcount,
+ppost.premium as postpremium
+from cpre
+full join cpost using (state,year)
+full join ppre using (state,year)
+full join ppost using (state,year)
+order by 1,2;
+
+alter table us.firm_claim_policy_state_year add primary key (state,year);
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
 -- Policy and Claim summary by state for overlapping years 1994-2014
 drop table us.firm_claim_policy_state;
 create table us.firm_claim_policy_state as
