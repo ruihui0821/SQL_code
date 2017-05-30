@@ -259,7 +259,7 @@ left outer join fima.nation n on (pre.community = n.cid)
 order by 1, 2;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
--- PRE & POST CLAIM SUMMARY FOR STATE
+-- PRE & POST POLICY SUMMARY FOR STATE
 drop table us.pre_post_firm_policy_state;
 create table us.pre_post_firm_policy_state as
 with pre as(
