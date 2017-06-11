@@ -169,3 +169,72 @@ order by 1;
 
 alter table us.firm_claim_policy_year add primary key (year);
 
+------------------------------------------------------------------------------------------------------------------------------------------------
+-- FIRM ratio by state for 1) post to pre firm claims for all year; 
+-- 2) post to pre firm claims for overlapping years 1994-2014, normalized by policy;
+-- 3) post to all firm claims for overlapping years 1994-2014, normalized by policy
+drop table us.firm_ratio_state;
+create table us.firm_ratio_state as
+with a as (
+  select
+  state,
+  sum(cpostcount) as cpostcount,
+  sum(cprecount) as cprecount,
+  sum(postpay) as postpay,
+  sum(prepay) as prepay
+  from us.firm_claim_policy_state_year
+  group by 1 order by 1),
+b as (
+  select
+  state,
+  sum(cpostcount) as cpostcount,
+  sum(cprecount) as cprecount,
+  sum(postpay) as postpay,
+  sum(prepay) as prepay,
+  sum(ppostcount) as ppostcount,
+  sum(pprecount) as pprecount,
+  sum(postpremium) as postpremium,
+  sum(prepremium) as prepremium,
+  sum(cpostcount + cprecount) as callcount,
+  sum(ppostcount + pprecount) as pallcount,
+  sum(postpay + prepay) as pay,
+  sum(postpremium + prepremium) as premium
+  from us.firm_claim_policy_state_year
+  where year >= 1994 and year <= 2014
+  group by 1 order by 1)
+select 
+a.state,
+a.cpostcount/a.cprecount as ratio1,
+a.postpay/a.prepay as ratio2,
+(b.cpostcount/b.ppostcount)/(b.cprecount/b.pprecount) as ratio3,
+(b.postpay/b.postpremium)/(b.prepay/b.prepremium) as ratio4,
+(b.cpostcount/b.ppostcount)/(b.callcount/b.pallcount) as ratio5,
+(b.postpay/b.postpremium)/(b.pay/b.premium) as ratio6
+from a 
+join b using(state)
+order by 1;
+
+alter table us.firm_ratio_state add primary key (state);
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
