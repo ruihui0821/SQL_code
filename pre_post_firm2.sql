@@ -206,10 +206,12 @@ select
 a.state,
 a.cpostcount/a.cprecount as ratio1,
 a.postpay/a.prepay as ratio2,
-(b.cpostcount/b.ppostcount)/(b.cprecount/b.pprecount) as ratio3,
-(b.postpay/b.postpremium)/(b.prepay/b.prepremium) as ratio4,
-(b.cpostcount/b.ppostcount)/(b.callcount/b.pallcount) as ratio5,
-(b.postpay/b.postpremium)/(b.pay/b.premium) as ratio6
+a.cpostcount/(a.cpostcount+a.cprecount) as ratio3,
+a.postpay/(a.postpay+a.prepay) as ratio4,
+(b.cpostcount/b.ppostcount)/(b.cprecount/b.pprecount) as ratio5,
+(b.postpay/b.postpremium)/(b.prepay/b.prepremium) as ratio6,
+(b.cpostcount/b.ppostcount)/(b.callcount/b.pallcount) as ratio7,
+(b.postpay/b.postpremium)/(b.pay/b.premium) as ratio8
 from a 
 join b using(state)
 order by 1;
