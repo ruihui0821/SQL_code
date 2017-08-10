@@ -170,9 +170,11 @@ order by 1;
 alter table us.firm_claim_policy_year add primary key (year);
 
 ------------------------------------------------------------------------------------------------------------------------------------------------
--- FIRM ratio by state for 1) post to pre firm claims for all year; 
+-- FIRM ratio by state for 
+-- 1) post to pre firm claims for all year; 
 -- 2) post to pre firm claims for overlapping years 1994-2014, normalized by policy;
--- 3) post to all firm claims for overlapping years 1994-2014, normalized by policy
+-- 3) post to all firm claims for overlapping years 1994-2014, normalized by policy;
+-- 4) post to all fir claims for all year
 drop table us.firm_ratio_state;
 create table us.firm_ratio_state as
 with a as (
@@ -182,8 +184,8 @@ with a as (
   sum(cprecount) as cprecount,
   sum(postpay) as postpay,
   sum(prepay) as prepay,
-  sum(cpostcount + cprecount) as callcount,
-  sum(postpay + prepay) as pay
+  sum(cpostcount) + sum(cprecount) as callcount,
+  sum(postpay) + sum(prepay) as pay
   from us.firm_claim_policy_state_year
   group by 1 order by 1),
 b as (
@@ -197,10 +199,10 @@ b as (
   sum(pprecount) as pprecount,
   sum(postpremium) as postpremium,
   sum(prepremium) as prepremium,
-  sum(cpostcount + cprecount) as callcount,
-  sum(ppostcount + pprecount) as pallcount,
-  sum(postpay + prepay) as pay,
-  sum(postpremium + prepremium) as premium
+  sum(cpostcount) + sum(cprecount) as callcount,
+  sum(ppostcount) + sum(pprecount) as pallcount,
+  sum(postpay) + sum(prepay) as pay,
+  sum(postpremium) + sum(prepremium) as premium
   from us.firm_claim_policy_state_year
   where year >= 1994 and year <= 2014
   group by 1 order by 1)
@@ -224,7 +226,7 @@ order by 1;
 
 alter table us.firm_ratio_state add primary key (state);
 
-  
+select state, round( CAST(ratio3 as numeric),3) from us.firm_ratio_state order by 2;  
   
   
   
