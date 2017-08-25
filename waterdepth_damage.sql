@@ -30,7 +30,10 @@ with s as (
  select
   gid,
   extract(year from dt_of_loss) as year,
-  waterdepth, 
+  waterdepth,
+  re_state as state,
+  re_community as community,
+  fzone,
   pay_bldg,
   pay_cont,
   pay_bldg + pay_cont as pay, 
@@ -47,6 +50,9 @@ where t_prop_val+val_cont > 0 and t_dmg_bldg + t_dmg_cont > 0)
 select
   gid,
   waterdepth, 
+  state,
+  community,
+  fzone,
   pay_bldg*rate as pay_bldg,
   pay_cont*rate as pay_cont,
   pay*rate as pay, 
@@ -61,9 +67,7 @@ select
 from s join public.inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
-  count  
----------
- 1584036
+SELECT 1584036
  
 alter table us.waterdepth_damage_value_2015 add primary key (gid);
 
@@ -132,7 +136,9 @@ with s as (
  select
   gid,
   extract(year from dt_of_loss) as year,
-  waterdepth, 
+  waterdepth,
+  re_community as community,
+  fzone,
   pay_bldg,
   pay_cont,
   pay_bldg + pay_cont as pay, 
@@ -149,6 +155,8 @@ where t_prop_val+val_cont > 0 and re_state = 'CA')
 select
   gid,
   waterdepth, 
+  community,
+  fzone,
   pay_bldg*rate as pay_bldg,
   pay_cont*rate as pay_cont,
   pay*rate as pay, 
@@ -163,6 +171,8 @@ select
 from s join public.inflation i on (i.from_year=s.year)
 where i.to_year=2015;
 
+SELECT 30412
+
 alter table ca.ca_waterdepth_damage_value_2015 add primary key (gid);
 
 select
@@ -175,16 +185,10 @@ from ca.ca_waterdepth_damage_value_2015
 group by 1
 order by 1;
 
-
-alter table ca.ca_waterdepth_damage_value_2015 add column cid character varying(6);
-update ca.ca_waterdepth_damage_value_2015 cw 
-set cid = (select c.re_community from ca.capaidclaims c where c.gid = cw.gid) 
-where exists (select c.re_community from ca.capaidclaims c where c.gid = cw.gid);
-
 alter table ca.ca_waterdepth_damage_value_2015 add column jurisdiction_id integer;
 update ca.ca_waterdepth_damage_value_2015 cw 
-set jurisdiction_id = (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid) 
-where exists (select c.jurisdiction_id from ca.capaidclaims c where c.gid = cw.gid);
+set jurisdiction_id = (select c.jurisdiction_id from public.paidclaims c where c.gid = cw.gid) 
+where exists (select c.jurisdiction_id from public.paidclaims c where c.gid = cw.gid);
 
 --- creating the waterdepth damage table for each community for each waterdepth in California
 drop table ca.ca_waterdepth_damage_community;
